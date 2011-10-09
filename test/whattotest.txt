@@ -1,0 +1,20 @@
+How to test:
+
+Initialize
+- cansecurity.init() with sessionKey, getUser and validatePassword - need initial info for testing
+- start up express with the right path
+- create http client for Web requests
+
+Testing: Make Web requests with
+	User/Pass
+	- no credentials - test that no user is there, no authtoken returned, returned 200
+	- incorrect credentials - test that no user is there, returns 401 unauthorized and authtoken of error=invalidpass
+	- correct credentials - test that user is in request, returns 200 along with an authtoken of success=<something>
+	Authtoken
+	- invalid authtoken - test that no user is there, returns authtoken error=invalidtoken, returns 200
+	- expired authtoken - test that no user is there, returns no authtoken, returns 200
+	- valid authtoken - test that user is there, returns 200 along with a new authtoken
+	Express Session
+	- login using user/pass, get authtoken back, new request without authtoken, should get 200 and new authtoken back
+
+	
