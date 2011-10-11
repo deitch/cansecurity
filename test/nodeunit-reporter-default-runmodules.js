@@ -26,32 +26,37 @@ exports.info = "Default tests reporter";
  */
 
 exports.run = function (files, options) {
-	var error, ok, bold, assertion_message, content, start, tracker, opts, names, i, paths;
-    if (!options) {
-        options = {
-		    "error_prefix": "\u001B[31m",
-		    "error_suffix": "\u001B[39m",
-		    "ok_prefix": "\u001B[32m",
-		    "ok_suffix": "\u001B[39m",
-		    "bold_prefix": "\u001B[1m",
-		    "bold_suffix": "\u001B[22m",
-		    "assertion_prefix": "\u001B[35m",
-		    "assertion_suffix": "\u001B[39m"
-		};
-		
-    }
+	var error, ok, bold, assertion_message, content, start, tracker, opts, names, i, paths, formats = {}, defaultFormats;
+	
+	options = options || {};
+    defaultFormats = {
+	    "error_prefix": "\u001B[31m",
+	    "error_suffix": "\u001B[39m",
+	    "ok_prefix": "\u001B[32m",
+	    "ok_suffix": "\u001B[39m",
+	    "bold_prefix": "\u001B[1m",
+	    "bold_suffix": "\u001B[22m",
+	    "assertion_prefix": "\u001B[35m",
+	    "assertion_suffix": "\u001B[39m"
+	};
+	for (i in defaultFormats) {
+		if (defaultFormats.hasOwnProperty(i)) {
+			formats[i] = options[i] || defaultFormats[i];
+		}
+	}
+	
 
     error = function (str) {
-        return options.error_prefix + str + options.error_suffix;
+        return formats.error_prefix + str + formats.error_suffix;
     };
     ok    = function (str) {
-        return options.ok_prefix + str + options.ok_suffix;
+        return formats.ok_prefix + str + formats.ok_suffix;
     };
     bold  = function (str) {
-        return options.bold_prefix + str + options.bold_suffix;
+        return formats.bold_prefix + str + formats.bold_suffix;
     };
     assertion_message = function (str) {
-        return options.assertion_prefix + str + options.assertion_suffix;
+        return formats.assertion_prefix + str + formats.assertion_suffix;
     };
 
     start = new Date().getTime();
@@ -115,6 +120,11 @@ exports.run = function (files, options) {
                    ' assertions (' + assertions.duration + 'ms)'
                 );
             }
+
+			// do we have a global callback?
+			if (options.done && typeof options.done === "function") {
+				options.done();
+			}
         },
         testStart: function(name) {
             tracker.put(name);

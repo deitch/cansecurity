@@ -119,7 +119,9 @@ runTests = function(tests) {
 		count++;
 	});
 	if (count > 0) {
-		reporter.run(sandbox.testFn);
+		reporter.run(sandbox.testFn,{done: function(){
+			server.close();
+		}});
 	} else {
 		console.log("No tests to run");
 	}
