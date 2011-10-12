@@ -77,6 +77,17 @@ The signature and expected parameters of the failure callback are as follows:
 
 	failure(error);
 
+Unauthenticated Errors
+----------------------
+cansecurity will never directly return errors. It will authenticate a user, or fail to do so, set request["X-CS-Auth"], and request.session["X-CS-Auth"] if sessions are enabled, and then call next() to jump to the next middleware. 
+
+cansecurity **will** call next(error) in only the following case: 
+If the user has provided HTTP Basic Authentication credentials in the form of username/password **and** the authentication fails. In that case, cansecurity will call 
+
+    next({status: 401, message:"some message"});
+
+It is up to you to make sure that you use expressjs's server.error() handler to correctly handle this error.
+
 Why We Need the Password
 ------------------------
 getUser() and validatePassword() both require the calling program to return a password. Although this is never passed out, why is the password necessary? 
