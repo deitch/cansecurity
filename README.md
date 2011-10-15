@@ -247,11 +247,13 @@ It is up to you to make sure that you use expressjs's server.error() handler to 
 The following authorization middleware methods are available. Each one is followed by an example.
 
 * restrictToLoggedIn - user must have logged in
+
 ````JavaScript
 server.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler);
 ````
 
 * restrictToSelf - user must have logged in and the user ID in the user object from authentication (fields.id above) must equal some parameter in the URL or body (params.id)
+
 ````JavaScript
 var cansec = require('cansecurity');
 cansec.init({
@@ -264,6 +266,7 @@ server.get("/some/route/:user",cansec.restrictToSelf,routeHandler);
 ````
 
 * restrictToRoles - user must have logged in and the user must have in his/her "roles" property (fields.roles) in the user object from authentication one of the named roles (one role as string or multiple in array). Roles argument to the function may be a string or an array of strings.
+
 ````JavaScript
 var cansec = require('cansecurity');
 cansec.init({
@@ -275,6 +278,7 @@ server.get("/api/siteadmin",cansec.restrictToRoles(["admin","superadmin"]),route
 // will require the User object from authentication to have a property "roles", which is an array of strings. If one of the strings is "admin", then /api/admin will be allowed. If one of the roles is "admin" or "superadmin", then /api/siteadmin will be allowed.
 ````
 * restrictToSelfOrRoles - combination of the previous two. Roles argument to the function may be a string or an array of strings.
+
 ````JavaScript
 var cansec = require('cansecurity');
 cansec.init({
@@ -290,6 +294,7 @@ server.put("/api/user/:user",cansec.restrictToSelfOrRoles("admin"),routeHandler)
 ````
 
 * restrictToParam - user must have logged in and some field in the user object (fields.id) from authentication must equal some parameter in the URL or body (params.id). Param argument to the function may be a string or an array of strings.
+
 ````JavaScript
 var cansec = require('cansecurity');
 cansec.init({
@@ -304,6 +309,7 @@ server.put("/api/user/search",cansec.restrictToParam("searchParam"),routeHandler
 ````
 	
 * restrictToParamOrRoles - user must have logged in and some field in the user object (fields.id) from authentication must equal some parameter in the URL or body (params.id) *or* user must have a specific role. Param argument and roles argument to the function may each be a string or an array of strings.
+
 ````JavaScript
 var cansec = require('cansecurity');
 cansec.init({
@@ -320,6 +326,7 @@ server.put("/api/address/search",cansec.restrictToParamOrRoles(["searchParam","a
 ````
 
 * restrictToField - user must have logged in and some field in the user object (fields.id) from authentication must equal the response to a given callback with a given field or fields parameter.
+
 ````JavaScript
 var cansec = require('cansecurity');
 cansec.init({
@@ -333,6 +340,7 @@ server.get("/api/user/search",cansec.restrictToField("owner",getObjectFn),routeH
 ````
 
 * restrictToFieldOrRoles - user must have logged in and some field in the user object (fields.id) from authentication must equal the response to a given callback with a given field or fields parameter, *or* the user must have a role or roles.
+
 ````JavaScript
 var cansec = require('cansecurity');
 cansec.init({
@@ -347,6 +355,7 @@ server.get("/api/user/search",cansec.restrictToFieldOrRoles(["owner","recipient"
 ````
 
 A typical use case for restrictToField and its variant restrictToFieldOrRoles is that you may load an object, and want to restrict its access to the owner of an object. For example, let us assume that you are loading an employee record. For that, restrictToSelf would be fine, since the User ID from authentication is likely to match the ID for requesting the employee record. The following example shows this use case:
+
 ````JavaScript
 var cansec = require('cansecurity');
 cansec.init({
@@ -369,6 +378,7 @@ server.get("/api/paystub/:payid",payStubLoad,cansec.restrictToField("employee",g
 ````
 
 In this example, we load the paystub, but do not send it. The paystub object retrieved by payStubLoad looks like this:
+
 ````JavaScript
 {
 	id: "34567",
