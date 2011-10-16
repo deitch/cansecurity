@@ -9,13 +9,19 @@ nodeunit = require('nodeunit'), fs = require('fs'), vm = require('vm'), sys = re
 code, sendResponse, tokenlib = require('../lib/token'), SESSIONKEY = "ABCDEFG",
 express = require('express'), cs = require('../lib/index'), cansec, http = require("http"), reporter,
 runTests, testRunner, server, PORT = 3020, user, URL = {host: "localhost",port: PORT, path: "/foo"}, send200,
+getCheckObject,
 sandbox = {testFn: testFn, nodeunit:nodeunit, console:console};
 
 // in case they ever fix it
 //reporter = nodeunit.reporters["default"];
 reporter = require('./nodeunit-reporter-default-runmodules');
 
-user = {name:"john",pass:"1234",age:25};
+user = {
+		"1":{name:"john",pass:"1234",age:25,id:"1",roles:["admin"]},
+		"2":{name:"jill",pass:"1234",age:30,id:"2"},
+		"3":{name:"norole",pass:"1234",id:"3"},
+		"4":{name:"userrole",pass:"1234",id:"4",roles:["user","regular"]}
+		};
 
 sendResponse = function(req,res,status,data) {
 	if (data) {
@@ -130,23 +136,39 @@ runTests = function(tests) {
 // initialize sessionManager
 cansec = cs.init({
 	getUser: function(login,success,failure){
-		if (user.name === login) {
-			success(user,user.name,user.pass);
+		var found = null;
+		// search for our user
+		_.each(user,function(val,key){
+			var ret = true;
+			if (val.name === login) {
+				found = val;
+				ret = false;
+			}
+			return(ret);
+		});
+		if (found) {
+			success(found,found.name,found.pass);
 		} else {
 			failure();
 		}
 	},
 	validatePassword: function(login,pass,cb){
-		var p = null, message, resuser = null;
-		if (user.name !== login) {
-			message = "invaliduser";
-		} else if (user.pass !== pass) {
-			message = "invalidpass";
-		} else {
-			message = null;
-			resuser = user;
-			p = pass;
-		}
+		var p = null, message = "invaliduser", resuser = null;
+		// search for our user
+		_.each(user,function(val,key) {
+			var ret = true;
+			if (val.name === login) {
+				ret = false;
+				if (val.pass === pass) {
+					message = null;
+					resuser = val;
+					p = pass;
+				} else {
+					message = "invalidpass";
+				}
+			}
+			return(ret);
+		});
 		cb(resuser,message,p);
 	},
 	sessionKey: SESSIONKEY
@@ -155,6 +177,9 @@ cansec = cs.init({
 send200 = function(req,res,next){
 	// send a 200
 	sendResponse(req,res,200);
+};
+getCheckObject = function(req,res) {
+	return({owner:"2",recipient:"4"});
 };
 
 // create our express server
@@ -175,12 +200,12 @@ server.get("/secure/selfOrRoles/:user/adminOrSuper",cansec.restrictToSelfOrRoles
 server.get("/secure/param",cansec.restrictToParam("searchParam"),send200);
 server.get("/secure/paramOrRole",cansec.restrictToParamOrRoles("searchParam","admin"),send200);
 server.get("/secure/paramOrMultipleRoles",cansec.restrictToParamOrRoles("searchParam",["admin","super"]),send200);
-server.get("/secure/field",cansec.restrictToField("owner"),send200);
-server.get("/secure/fields",cansec.restrictToField(["owner","recipient"]),send200);
-server.get("/secure/fields",cansec.restrictToFieldOrRoles("owner","admin"),send200);
-server.get("/secure/fields",cansec.restrictToFieldOrRoles("owner",["admin","super"]),send200);
-server.get("/secure/fields",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin"),send200);
-server.get("/secure/fields",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"]),send200);
+server.get("/secure/field",cansec.restrictToField("owner",getCheckObject),send200);
+server.get("/secure/fields",cansec.restrictToField(["owner","recipient"],getCheckObject),send200);
+server.get("/secure/fieldOrRole",cansec.restrictToFieldOrRoles("owner","admin",getCheckObject),send200);
+server.get("/secure/fieldOrRoles",cansec.restrictToFieldOrRoles("owner",["admin","super"],getCheckObject),send200);
+server.get("/secure/fieldsOrRole",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin",getCheckObject),send200);
+server.get("/secure/fieldsOrRoles",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"],getCheckObject),send200);
 
 
 server.error(function(err,req,res,next){
