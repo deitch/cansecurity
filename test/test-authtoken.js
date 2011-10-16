@@ -10,7 +10,7 @@ testFn.testAuthtoken = {
 			// should have no local session
 			header = {};
 			header[authHeader] = token;
-			doHttp(test,{method:"GET",responseCode:200,
+			doHttp(test,{method:"GET",path:"/public",responseCode:200,
 					header: header,
 					msg:"Should return 200",
 					cb:function(res,data){
@@ -28,7 +28,7 @@ testFn.testAuthtoken = {
 			token = tokenlib.generate("john","1234",new Date().getTime() - (24*60*60*1000));
 			header = {};
 			header[authHeader] = token;
-			doHttp(test,{method:"GET",responseCode:200,
+			doHttp(test,{method:"GET",path:"/public",responseCode:200,
 					header:header,
 					msg:"Should return 200",
 					cb:function(res,data){
@@ -46,7 +46,7 @@ testFn.testAuthtoken = {
 			token = tokenlib.generate("john","1234",new Date().getTime() + 15*60*1000);
 			header = {};
 			header[authHeader] = token;
-			doHttp(test,{method:"GET",responseCode:200,
+			doHttp(test,{method:"GET",path:"/public",responseCode:200,
 					header:header,
 					msg:"Should return 200",
 					cb:function(res,data){

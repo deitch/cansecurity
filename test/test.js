@@ -8,7 +8,7 @@ var tests = [], tmp = {}, _ = require('underscore'), exec = require('child_proce
 nodeunit = require('nodeunit'), fs = require('fs'), vm = require('vm'), sys = require('sys'), arg, testFn = {}, 
 code, sendResponse, tokenlib = require('../lib/token'), SESSIONKEY = "ABCDEFG",
 express = require('express'), cs = require('../lib/index'), cansec, http = require("http"), reporter,
-runTests, testRunner, server, PORT = 3020, user, URL = {host: "localhost",port: PORT, path: "/foo"},
+runTests, testRunner, server, PORT = 3020, user, URL = {host: "localhost",port: PORT, path: "/foo"}, send200,
 sandbox = {testFn: testFn, nodeunit:nodeunit, console:console};
 
 // in case they ever fix it
@@ -152,6 +152,10 @@ cansec = cs.init({
 	sessionKey: SESSIONKEY
 });
 
+send200 = function(req,res,next){
+	// send a 200
+	sendResponse(req,res,200);
+};
 
 // create our express server
 server = express.createServer();
@@ -159,11 +163,26 @@ server.configure(function(){
 	server.use(express.cookieParser());	
 	server.use(express.session({secret: "agf67dchkQ!"}));
 	server.use(cansec.validate);
-	server.use(function(req,res,next){
-		// send a 200
-		sendResponse(req,res,200);
-	});
+	server.use(server.router);
 });
+server.get("/public",send200);
+server.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
+server.get("/secure/user/:user",cansec.restrictToSelf,send200);
+server.get("/secure/roles/admin",cansec.restrictToRoles("admin"),send200);
+server.get("/secure/roles/adminOrSuper",cansec.restrictToRoles(["admin","super"]),send200);
+server.get("/secure/selfOrRoles/:user/admin",cansec.restrictToSelfOrRoles("admin"),send200);
+server.get("/secure/selfOrRoles/:user/adminOrSuper",cansec.restrictToSelfOrRoles(["admin","super"]),send200);
+server.get("/secure/param",cansec.restrictToParam("searchParam"),send200);
+server.get("/secure/paramOrRole",cansec.restrictToParamOrRoles("searchParam","admin"),send200);
+server.get("/secure/paramOrMultipleRoles",cansec.restrictToParamOrRoles("searchParam",["admin","super"]),send200);
+server.get("/secure/field",cansec.restrictToField("owner"),send200);
+server.get("/secure/fields",cansec.restrictToField(["owner","recipient"]),send200);
+server.get("/secure/fields",cansec.restrictToFieldOrRoles("owner","admin"),send200);
+server.get("/secure/fields",cansec.restrictToFieldOrRoles("owner",["admin","super"]),send200);
+server.get("/secure/fields",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin"),send200);
+server.get("/secure/fields",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"]),send200);
+
+
 server.error(function(err,req,res,next){
 	var data;
 	if (err && err.status) {

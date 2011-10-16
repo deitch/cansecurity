@@ -7,7 +7,7 @@ testFn.testUserpass = {
 			// should return 200
 			// should return no X-CS-Auth header
 			// should have no local session
-			doHttp(test,{method:"GET",responseCode:200,
+			doHttp(test,{method:"GET",path:"/public",responseCode:200,
 					msg:"Should return 200",
 					cb:function(res,data){
 						test.strictEqual(res.headers[authHeader],undefined,"Should not have authHeader");
@@ -19,7 +19,7 @@ testFn.testUserpass = {
 			// should return 200
 			// should return no X-CS-Auth header
 			// should have no local session
-			doHttp(test,{method:"GET",responseCode:401,
+			doHttp(test,{method:"GET",path:"/public",responseCode:401,
 					username:"john",password:"ABCD",
 					msg:"Should return 401 unauthenticated",
 					cb:function(res,data){
@@ -32,7 +32,7 @@ testFn.testUserpass = {
 			// should return 200
 			// should return no X-CS-Auth header
 			// should have no local session
-			doHttp(test,{method:"GET",responseCode:200,
+			doHttp(test,{method:"GET",path:"/public",responseCode:200,
 					username:"john",password:"1234",
 					msg:"Should return 200",
 					cb:function(res,data){
