@@ -7,7 +7,7 @@
 var tests = [], tmp = {}, _ = require('underscore'), exec = require('child_process').exec,
 nodeunit = require('nodeunit'), fs = require('fs'), vm = require('vm'), sys = require('sys'), arg, testFn = {}, 
 code, sendResponse, tokenlib = require('../lib/token'), SESSIONKEY = "ABCDEFG",
-express = require('express'), cansec = require('../lib/index'), http = require("http"), reporter,
+express = require('express'), cs = require('../lib/index'), cansec, http = require("http"), reporter,
 runTests, testRunner, server, PORT = 3020, user, URL = {host: "localhost",port: PORT, path: "/foo"},
 sandbox = {testFn: testFn, nodeunit:nodeunit, console:console};
 
@@ -128,7 +128,7 @@ runTests = function(tests) {
 };
 
 // initialize sessionManager
-cansec.init({
+cansec = cs.init({
 	getUser: function(login,success,failure){
 		if (user.name === login) {
 			success(user,user.name,user.pass);

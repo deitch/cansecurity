@@ -26,10 +26,12 @@ Usage involves two key steps: initialization and validation.
 #### Installation
 
 #### Initialization
-To initialize cansecurity, you must first require() it, and then init() it:
+To initialize cansecurity, you must first require() it, and then init() it, which will return the middleware you can use:
 
-    var cs = require('cansecurity');
-    cs.init({});
+````JavaScript
+var cs = require('cansecurity');
+var cansec = cs.init({});
+````
 
 In initialization, you set four key authentication parameters as properties of the config object passed to cs.init():
 
@@ -41,7 +43,7 @@ In initialization, you set four key authentication parameters as properties of t
 #### Validation
 Validation is straightforward. Once you have set up cansecurity properly, it functions as standard expressjs middleware:
 
-    server.use(cs.validate);
+    server.use(cansec.validate);
 
 This should generally be done **before** your router.
 
@@ -132,11 +134,11 @@ Extensive performance testing has not been done. However, all of the algorithms 
 For a good example, see the test suite in test/test.js, specifically the section beginning cansec.init. It is reproduced below:
 
 ```JavaScript
-var cansec = require('cansecurity'), 
+var cs = require('cansecurity'), cansec,
 // static database for testing
 user = {name:"john",pass:"1234",age:25};
 
-cansec.init({
+cansec = cs.init({
 	getUser: function(login,success,failure){
 		if (user.name === login) {
 			success(user,user.name,user.pass);
@@ -198,7 +200,7 @@ The easiest way to demonstrate this is with an example, following which we will 
 ### Example
 ````JavaScript
 express = require('express'),
-cansec = require('cansecurity');
+cansec = require('cansecurity').init({});
 server = express.createServer();
 // do lots of server initialization
 server.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler);
@@ -212,8 +214,14 @@ Usage of cansecurity authorization is only possible if you are using cansecurity
 The authorization component of cansecurity is initialized at the same time as the authentication component:
 
 ````JavaScript
-var cs = require('cansecurity');
-cs.init({});
+var cs = require('cansecurity'), cansec;
+cansec = cs.init({});
+````
+
+or more simply:
+
+````JavaScript
+var cansec = require('cansecurity').init({});
 ````
 
 In initialization, you set two key authorization parameters as properties of the config object passed to cs.init(). Both are objects and both are optional.
@@ -223,6 +231,8 @@ In initialization, you set two key authorization parameters as properties of the
 ** fields.roles: Property of the User object that contains the user roles, as an array of strings. If none is provided, then "roles" is used.
 * params: OPTIONAL. Names of params passed as part of the expressjs route, and retrievable as this.params[param]. These params are used as part in some of the restrictTo* authorization middleware. There is currently one field:
 ** params.id: Param in which the user ID is normally stored, if none is provided, then "user" is used. For example, if params.id === "foo", then the route should have /user/:foo. 
+
+Initialization returns the object that has the restrictTo* middleware.
 
 #### Middleware
 As in the example above, once you have authentication and authorization set up and initialized, you may use authorization middleware:
@@ -255,8 +265,8 @@ server.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler);
 * restrictToSelf - user must have logged in and the user ID in the user object from authentication (fields.id above) must equal some parameter in the URL or body (params.id)
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cs = require('cansecurity');
+cansec = cs.init({
 	fields: {id: "userid"},
 	params: {id: "user"}
 });
@@ -268,8 +278,7 @@ server.get("/some/route/:user",cansec.restrictToSelf,routeHandler);
 * restrictToRoles - user must have logged in and the user must have in his/her "roles" property (fields.roles) in the user object from authentication one of the named roles (one role as string or multiple in array). Roles argument to the function may be a string or an array of strings.
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
@@ -280,8 +289,7 @@ server.get("/api/siteadmin",cansec.restrictToRoles(["admin","superadmin"]),route
 * restrictToSelfOrRoles - combination of the previous two. Roles argument to the function may be a string or an array of strings.
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
@@ -296,8 +304,7 @@ server.put("/api/user/:user",cansec.restrictToSelfOrRoles("admin"),routeHandler)
 * restrictToParam - user must have logged in and some field in the user object (fields.id) from authentication must equal some parameter in the URL or body (params.id). Param argument to the function may be a string or an array of strings.
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
@@ -311,8 +318,7 @@ server.put("/api/user/search",cansec.restrictToParam("searchParam"),routeHandler
 * restrictToParamOrRoles - user must have logged in and some field in the user object (fields.id) from authentication must equal some parameter in the URL or body (params.id) *or* user must have a specific role. Param argument and roles argument to the function may each be a string or an array of strings.
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
@@ -328,8 +334,7 @@ server.put("/api/address/search",cansec.restrictToParamOrRoles(["searchParam","a
 * restrictToField - user must have logged in and some field in the user object (fields.id) from authentication must equal the response to a given callback with a given field or fields parameter.
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
@@ -342,8 +347,7 @@ server.get("/api/user/search",cansec.restrictToField("owner",getObjectFn),routeH
 * restrictToFieldOrRoles - user must have logged in and some field in the user object (fields.id) from authentication must equal the response to a given callback with a given field or fields parameter, *or* the user must have a role or roles.
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
@@ -357,8 +361,7 @@ server.get("/api/user/search",cansec.restrictToFieldOrRoles(["owner","recipient"
 A typical use case for restrictToField and its variant restrictToFieldOrRoles is that you may load an object, and want to restrict its access to the owner of an object. For example, let us assume that you are loading an employee record. For that, restrictToSelf would be fine, since the User ID from authentication is likely to match the ID for requesting the employee record. The following example shows this use case:
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
@@ -368,8 +371,7 @@ server.get("/api/employee/:user",cansec.restrictToSelfOrRoles("admin"),sendDataF
 However, what if you are retrieving a record whose authorization requirements are not known until it is loaded. For example, you are loading a paystub, whose URL is /api/paystubs/34567. Until you load the paystub, you don't actually know who the owner is. Of course, you might make it accessible only via a more detailed API as /api/employee/12345/paystubs/34567, but let us assume that you need to do it directly, with the first simplified API. Until you load the actual paystubs object, and see that the employee is, indeed, 12345, the one who logged in, you don't know whether or not to show it. The following example describes how to simply implement this use case:
 
 ````JavaScript
-var cansec = require('cansecurity');
-cansec.init({
+var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
