@@ -13,8 +13,7 @@ getCheckObject,
 sandbox = {testFn: testFn, nodeunit:nodeunit, console:console};
 
 // in case they ever fix it
-//reporter = nodeunit.reporters["default"];
-reporter = require('./nodeunit-reporter-default-runmodules');
+reporter = nodeunit.reporters["default"];
 
 user = {
 		"1":{name:"john",pass:"1234",age:25,id:"1",roles:["admin"]},
@@ -125,9 +124,9 @@ runTests = function(tests) {
 		count++;
 	});
 	if (count > 0) {
-		reporter.run(sandbox.testFn,{done: function(){
+		reporter.run(sandbox.testFn,null,function(){
 			server.close();
-		}});
+		});
 	} else {
 		console.log("No tests to run");
 	}
