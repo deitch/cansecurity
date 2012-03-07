@@ -1,9 +1,6 @@
 /*jslint nomen:false, node:true */
 /*global exports*/
 
-/*
- * rest api test cases for studymesh
- */
 var tests = [], tmp = {}, _ = require('underscore'), exec = require('child_process').exec,
 nodeunit = require('nodeunit'), fs = require('fs'), vm = require('vm'), sys = require('sys'), arg, testFn = {}, 
 code, sendResponse, tokenlib = require('../lib/token'), SESSIONKEY = "ABCDEFG",
@@ -205,6 +202,9 @@ server.get("/secure/fieldOrRole",cansec.restrictToFieldOrRoles("owner","admin",g
 server.get("/secure/fieldOrRoles",cansec.restrictToFieldOrRoles("owner",["admin","super"],getCheckObject),send200);
 server.get("/secure/fieldsOrRole",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin",getCheckObject),send200);
 server.get("/secure/fieldsOrRoles",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"],getCheckObject),send200);
+// conditionals
+server.get("/secure/conditionalDirect",cansec.ifParam("private","true").restrictToLoggedIn,send200);
+server.get("/secure/conditionalIndirect",cansec.ifParam("private","true").restrictToRoles(["admin","super"]),send200);
 
 
 server.error(function(err,req,res,next){

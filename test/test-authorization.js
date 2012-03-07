@@ -352,6 +352,35 @@ testFn.testAuthorization = {
 					username: "john", password: "1234",
 					msg:"Should return 200"});
 		}
+	}),
+	conditional: nodeunit.testCase({
+	  // conditional without the condition should pass
+	  withoutConditionDirect: function(test) {
+			doHttp(test,{method:"GET",path:"/secure/conditionalDirect",responseCode:200,
+					msg:"Should return 200"});
+	  },
+	  withConditionDirectFail: function(test) {
+			doHttp(test,{method:"GET",path:"/secure/conditionalDirect?private=true",responseCode:401,
+			    responseJson:{message:"unauthenticated"}, msg:"Should return 401"});
+	  },
+	  withConditionDirectSucceed: function(test) {
+			doHttp(test,{method:"GET",path:"/secure/conditionalDirect?private=true",responseCode:200,
+			    username: "john", password: "1234",
+			    msg:"Should return 200"});
+	  },
+	  withoutConditionIndirect: function(test) {
+			doHttp(test,{method:"GET",path:"/secure/conditionalIndirect",responseCode:200,
+					msg:"Should return 200"});
+	  },
+	  withConditionIndirectFail: function(test) {
+			doHttp(test,{method:"GET",path:"/secure/conditionalIndirect?private=true",responseCode:401,
+	        responseJson:{message:"unauthenticated"}, msg:"Should return 401"});
+	  },
+	  withConditionIndirectSucceed: function(test) {
+			doHttp(test,{method:"GET",path:"/secure/conditionalIndirect?private=true",responseCode:200,
+					username: "john", password: "1234",
+					msg:"Should return 200"});
+	  }
 	})
 };
 

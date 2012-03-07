@@ -195,6 +195,8 @@ Authorization
 -------------
 Authorization is structured as route-specific middleware. Once authentication has (or has not) been performed, it is possible to restrict access to a particular route.
 
+As of release 0.3.0, authorization also includes conditionals, allowing the authorization to be applied only if certain parameters are met.
+
 The easiest way to demonstrate this is with an example, following which we will describe all of the options and APIs.
 
 ### Example
@@ -204,6 +206,7 @@ cansec = require('cansecurity').init({});
 server = express.createServer();
 // do lots of server initialization
 server.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler);
+server.get("/some/route",cansec.ifParam("private","true").restrictToRoles("admin"),routeHandler);
 
 ````
 
@@ -241,6 +244,7 @@ As in the example above, once you have authentication and authorization set up a
 server.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler);
 server.get("/my/data/:user",cansec.restrictToSelf,routeHandler);
 server.get("/admin/:user",cansec.restrictToRoles("admin"),routeHandler);
+server.get("/user",cansec.ifParam("secret","true").restrictToRoles("admin"),routeHandler);
 
 ````
 
@@ -254,7 +258,13 @@ Obviously, authentication comes before authorization, and if the user fails to a
 It is up to you to make sure that you use expressjs's server.error() handler to correctly handle this error.
 
 ### Middleware API 
-The following authorization middleware methods are available. Each one is followed by an example.
+The following authorization middleware methods are available. Each one is followed by an example. There are two sections
+
+* Regular API: Regular restrictTo* that are always applied.
+* Conditional API: Conditions under which to apply the regular restrictTo* interfaces.
+
+#### Regular API
+Regular API interfaces are used to restrict access, each example is given below.
 
 * restrictToLoggedIn - user must have logged in
 
@@ -390,6 +400,23 @@ In this example, we load the paystub, but do not send it. The paystub object ret
 }
 ````
 This is then stored in the request object. Now getObjectFn can return the same object, which has employee as "12345". This is then matched to User.userid, which will allow it to proceed.
+
+#### Conditional API
+
+The conditional API simply creates conditions under which the regular restrictions are applied. If the conditions are not met, then restrictions are not applied.
+
+* ifParam - apply the restriction only if a certain parameter matches a certain value.
+
+What if you have a resource that is normally accessible by all, but if certain parameters are applied, e.g. ?secret=true, then it should be restricted to an admin?
+
+````JavaScript
+server.get("/api/employee",cansec.ifParameter("secret","true").restrictToRoles("admin"),sendDataFn);
+````
+
+In the above example, anyone can do a GET on /api/employee, but if they pass the parameter ?secret=true, then they will have to be logged in and have the role "admin" defined. 
+
+In our example, sendDataFn also checks for that parameter. If it is not set, then it sends public data about the employee list; if it is set, it sends public and private data, trusting that cansecurity prevented someone from getting in with ?secret=true unless they are authorized.
+
 
 ### Why We Need a "get" Function for restrictToField
 A common pattern, as shown in the last example above, is to retrieve an object, check it against the user, and then determine whether or not to allow the request to proceed. cansecurity would *love* to be able to just do the check directly. It even knows which field/property to check: "employee". It has two problems, however:
