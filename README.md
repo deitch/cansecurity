@@ -52,6 +52,21 @@ If the user is successfully authenticated, then the user object will be placed i
     req["X-CS-Auth"];
     req.session["X-CS-AUTH"].user;  // only if expressjs sessions have been enabled
 
+However, for safety, you should retrieve it using the conveniene method:
+
+````JavaScript
+require('cansecurity').getUser(request);
+````
+
+You can also determine *how* the current user was authorized, credentials (e.g. password) and token, by calling 
+
+````JavaScript
+require('cansecurity').getAuthMethod(request);
+// returns "credentials" or "token"
+````
+
+This is very useful, e.g. if you need the existing password for an action. If the user authenticates via token, you may want to require them to send the existing password in the body; but if the authentication was done via password, you may not want to make them send it twice.
+
 
 ### Required Options
 
