@@ -2,7 +2,7 @@
 /*global exports*/
 
 var tests = [], tmp = {}, _ = require('underscore'), exec = require('child_process').exec,
-nodeunit = require('nodeunit'), fs = require('fs'), vm = require('vm'), sys = require('sys'), arg, testFn = {}, 
+nodeunit = require('nodeunit'), fs = require('fs'), vm = require('vm'), arg, testFn = {}, 
 code, sendResponse, tokenlib = require('../lib/token'), SESSIONKEY = "ABCDEFG",
 express = require('express'), cs = require('../lib/index'), cansec, http = require("http"), reporter,
 runTests, testRunner, server, PORT = 3020, user, URL = {host: "localhost",port: PORT, path: "/foo"}, send200,
