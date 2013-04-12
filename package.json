@@ -1,7 +1,7 @@
 { 
 	"name": "cansecurity", 
 	"description": "Authentication, authorization, session manager, single-sign-on (SSO)  and security framework for node applications",
-	"version": "0.4.5",
+	"version": "0.4.6",
 	"url": "http://github.com/deitch/cansecurity",
 	"author": "Avi Deitcher <avi@deitcher.net>",
 	"engines": ["node >= 0.3"],
