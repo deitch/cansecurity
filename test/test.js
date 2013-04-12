@@ -1,9 +1,9 @@
-/*jslint nomen:false, node:true */
+/*jslint nomen:true, node:true */
 /*global exports*/
 
 var tests = [], tmp = {}, _ = require('underscore'), exec = require('child_process').exec,
 nodeunit = require('nodeunit'), fs = require('fs'), vm = require('vm'), arg, testFn = {}, 
-code, sendResponse, tokenlib = require('../lib/token'), SESSIONKEY = "ABCDEFG",
+code, sendResponse, tokenlib = require('../lib/token'), SESSIONKEY = "ABCDEFG", TESTROOT = "./test/",
 express = require('express'), cs = require('../lib/index'), cansec, http = require("http"), reporter,
 runTests, testRunner, server, PORT = 3020, user, URL = {host: "localhost",port: PORT, path: "/foo"}, send200,
 getCheckObject,
@@ -94,17 +94,17 @@ runTests = function(tests) {
 	_.each(tests,function(elm,i){
 		if (elm === "all") {
 			// just load all from folder
-			_.each(fs.readdirSync("./") || [], function(f) {
+			_.each(fs.readdirSync(TESTROOT) || [], function(f) {
 				file = f;
 				/*jslint regexp:false */
 				if (file.match(/^test-.*\.js$/)) {
 					/*jslint regexp:true */
-					code = fs.readFileSync("./"+file);
-					vm.runInNewContext(code,sandbox,file);
+					code = fs.readFileSync(TESTROOT+file);
+					vm.runInNewContext(code,sandbox,TESTROOT+file);
 				}
 			});
 		} else {
-			file = "./test-"+elm+".js";
+			file = TESTROOT+"test-"+elm+".js";
 			code = fs.readFileSync(file);
 			vm.runInNewContext(code,sandbox,file);
 		}

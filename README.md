@@ -441,3 +441,5 @@ A common pattern, as shown in the last example above, is to retrieve an object, 
 
 
 
+### Testing
+To run the tests, from the root directory, run `node ./test/test.js *module* *module* ....`. If no module name is given, then it runs all, as does `node ./test/test.js all`. The module names should match the file names in `./test/`, e.g. `authtoken authorization` etc.
