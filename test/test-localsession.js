@@ -1,57 +1,49 @@
-/*global nodeunit, userpass, doHttp, testFn, tokenlib */
-var authHeader = "X-CS-Auth".toLowerCase(), successRe = /^success=(([^:]*):([^:]*):([^:]*))$/, user = "john", pass = "1234";
-testFn.localSession = {
-	localSession: nodeunit.testCase({
-		// get the user foo and show they do not exist
-		localSession : function(test) {
-			// should return 200
-			// should return X-CS-Auth header
-			// should be able to extract the session cookie and use it
-			// should have no local session
-			doHttp(test,{method:"GET",path:"/public",responseCode:200,
-					msg:"Should return 200 for initial user/pass setting",
-					username:"john",password:"1234",
-					cb:function(res,data){
-						// get the cookie, play it back
-						var cookie = res.headers["set-cookie"][0], header = {};
-						cookie = cookie.split(";")[0];
-						header.cookie = cookie;
-						doHttp(test,{method:"GET",path:"/public",responseCode:200,
-							msg: "Should return 200 when using cookie to refer to previous session",
-							header:header,
-							cb:function(res,data) {
-								var match = res.headers[authHeader].match(successRe);
-								test.strictEqual(match.length,5,"Should have authHeader");
-								test.done();
-							}
-						});
-					}});
-		},
-		multipleRequests : function(test) {
-			doHttp(test,{method:"GET",path:"/public",responseCode:200,
-					msg:"Should return 200 for initial user/pass setting",
-					username:user,password:pass,
-					cb:function(res,data){
-						// get the cookie, play it back, and check the login success header
-						var match = res.headers[authHeader].match(successRe), cookie = res.headers["set-cookie"][0], header = {};
+/*jslint node:true, nomen:true */
+/*global before,it,describe */
+var express = require('express'), app = express(), cansec = require('./resources/cs'), request = require('supertest'),
+path = "/public", r, async = require('async'),
+authHeader = "X-CS-Auth".toLowerCase(), successRe = /^success=(([^:]*):([^:]*):([^:]*))$/, user = "john", pass = "1234";
 
-						test.strictEqual(match.length,5,"Should have authHeader");
-						test.equal(match[3],user,"should return user in second part of token");
-
-						cookie = cookie.split(";")[0];
-						header.cookie = cookie;
-						doHttp(test,{method:"GET",path:"/public",responseCode:200,
-							msg: "Should return 200 when using cookie to refer to previous session",
-							header:header,
-							cb:function(res,data) {
-								var match = res.headers[authHeader].match(successRe);
-								test.strictEqual(match.length,5,"Should have authHeader");
-								test.equal(match[3],user,"should return user in second part of token");
-								test.done();
-							}
-						});
-					}});
-		}
-	})
-};
-
+describe('local session', function(){
+  before(function(){
+		app = express();
+		app.use(express.cookieParser());	
+		app.use(express.session({secret: "agf67dchkQ!"}));
+		app.use(cansec.validate);
+		app.use(app.router);
+		app.get(path,function (req,res,next) {res.send(200);});
+		r = request(app);    
+  });
+	it('should work with a local cookie', function(done){
+		async.waterfall([
+		  function (cb) {r.get(path).auth(user,pass).expect(200,cb);},
+			function (res,cb) {
+				var cookie = res.headers["set-cookie"][0];
+				r.get(path).set("cookie",cookie).expect(200).expect(authHeader,successRe,cb);
+			}
+		],done);
+	});
+	it('should work with multiple requests', function(done){
+	  async.waterfall([
+			function (cb) {r.get(path).auth(user,pass).expect(200).expect(authHeader,successRe,cb);},
+			function (res,cb) {
+				var match = res.headers[authHeader].match(successRe), cookie = res.headers["set-cookie"][0];
+				if (match.length !== 5) {
+					cb("Missing authHeader");
+				} else if (match[3] !== user) {
+					cb("Missing user in authHeader");
+				} else {
+					cookie = cookie.split(";")[0];
+					r.get(path).set("cookie",cookie).expect(200).expect(authHeader,successRe,cb);
+				}
+			}, function (res,cb) {
+				var match = res.headers[authHeader].match(successRe);
+				if (match[3] !== user) {
+					cb("Missing user in header");
+				} else {
+					cb();
+				}
+			}
+		],done);
+	});
+});

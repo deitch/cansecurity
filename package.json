@@ -1,13 +1,21 @@
 { 
 	"name": "cansecurity", 
-	"description": "Authentication, authorization, session manager, single-sign-on (SSO)  and security framework for node applications",
-	"version": "0.4.7",
+	"description": "cansecurity is your all-in-one security library for user authentication management and authorization in node (and specifically expressjs) apps.",
+	"version": "0.4.8",
 	"url": "http://github.com/deitch/cansecurity",
 	"author": "Avi Deitcher <avi@deitcher.net>",
 	"engines": ["node >= 0.3"],
 	"main": "./lib/index.js", 
-	"dependencies": {"express":">=2.0.0"},
-	"devDependencies": {"nodeunit":">=0.5.0","underscore":">=1.1.0","express":">=2.0.0"},
+	"dependencies": {
+		"express":">=2.0.0"
+	},
+	"devDependencies": {
+    "lodash":">=1.3.1",
+		"express":"3.x",
+		"async":"0.2.x",
+		"mocha":"1.x",
+		"supertest":"0.x"	
+	},
 	"test":"./test/test.js",
 	"repository": {
 		"type" : "git",
