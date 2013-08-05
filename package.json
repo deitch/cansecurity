@@ -16,7 +16,9 @@
 		"mocha":"1.x",
 		"supertest":"0.x"	
 	},
-	"test":"./test/test.js",
+	"scripts":{
+		"test":"node_modules/.bin/mocha"
+	},
 	"repository": {
 		"type" : "git",
 		"url" : "http://github.com/deitch/cansecurity.git"
