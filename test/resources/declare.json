@@ -1,0 +1,16 @@
+{
+	"routes": [
+		["GET","/secure/loggedIn","deny","req.user !== undefined && req.user !== null"],
+		["GET","/secure/denyAll","deny","false === true"],
+		["GET","/secure/allowAll","allow","false === true"],
+		["GET","/secure/deny","deny","req.param('abc') === 'abc'"],
+		["GET","/secure/allow","allow","req.param('abc') === 'abc'"],
+		["GET","/secure/denyError","deny","req.foo.a.b.c.d === 'q'"],
+		["GET","/secure/allowError","allow","req.foo.a.b.c.d === 'q'"],
+		
+		["GET","/secure/parameter",{"private":"true"},"deny","false === true"],
+		
+		["GET","/secure/chainedParameter",{"private":"true"},"deny","false === true"],
+		["GET","/secure/chainedParameter","deny","req.param('abc') === 'abc'"]
+	]	
+}
