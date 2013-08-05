@@ -1,6 +1,6 @@
 /*jslint node:true */
 /*global before,it,describe */
-var express = require('express'), app = express(), cansec = require('./resources/cs'), errorHandler = require('./resources/error'),
+var express = require('express'), app = express(), cansec = require('./resources/cs').init(), errorHandler = require('./resources/error'),
 request = require('supertest'), r,
 authHeader = "X-CS-Auth".toLowerCase(), path = "/public";
 

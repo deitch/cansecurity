@@ -1,7 +1,7 @@
 /*jslint node:true */
 /*global before,it,describe */
 var express = require('express'), app = express(), async = require('async'),
-cansec = require('./resources/cs'), tokenlib = require('../lib/token'), request = require('supertest'), r,
+cansec = require('./resources/cs').init(), tokenlib = require('../lib/token'), request = require('supertest'), r,
 authHeader = "X-CS-Auth".toLowerCase(), path = "/public";
 
 describe('authtoken', function(){

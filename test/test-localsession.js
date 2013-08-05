@@ -1,6 +1,6 @@
 /*jslint node:true, nomen:true */
 /*global before,it,describe */
-var express = require('express'), app = express(), cansec = require('./resources/cs'), request = require('supertest'),
+var express = require('express'), app = express(), cansec = require('./resources/cs').init(), request = require('supertest'),
 path = "/public", r, async = require('async'),
 authHeader = "X-CS-Auth".toLowerCase(), successRe = /^success=(([^:]*):([^:]*):([^:]*))$/, user = "john", pass = "1234";
 

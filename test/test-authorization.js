@@ -1,7 +1,7 @@
 /*jslint node:true, nomen:true */
 /*global before, it, describe */
 var express = require('express'), app = express(), request = require('supertest'), _ = require('lodash'), 
-cansec = require('./resources/cs'), errorHandler = require('./resources/error'),
+cansec = require('./resources/cs').init(), errorHandler = require('./resources/error'),
 r, path, q, unauthenticated = {message:"unauthenticated"}, unauthorized = {message:"unauthorized"},
 send200 = function(req,res,next){
 	// send a 200
