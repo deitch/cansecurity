@@ -19,7 +19,7 @@ describe('declarative authorization', function(){
 		app.use(express.session({secret: "agf67dchkQ!"}));
 		app.use(cansec.validate);
 		// This is where we instantiate the declarative authorizer
-		app.use(cansec.authorizer(app,declareFile));
+		app.use(cansec.authorizer(declareFile));
 		app.use(app.router);
 		app.use(errorHandler);
 		
