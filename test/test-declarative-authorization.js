@@ -79,4 +79,46 @@ describe('declarative authorization', function(){
 		  r.get('/secure/chainedParameter').query({abc:'abc'}).expect(200,done);
 		});
 	});
+	describe('login required', function(){
+		describe('with only login option', function(){
+			before(function(){
+			  path = '/secure/login';
+			});
+		  it('should send 401 when not logged in', function(done){
+		    r.get(path).expect(401,done);
+		  });
+		  it('should send 401 when logged in with wrong password', function(done){
+		    r.get(path).auth("john","nopass").expect(401,done);
+		  });
+			it('should send 403 when logged in but no param', function(done){
+			  r.get(path).auth("john","1234").expect(403,done);
+			});
+			it('should send 403 when logged in with wrong param', function(done){
+			  r.get(path).auth("john","1234").query({abc:"cba"}).expect(403,done);
+			});
+			it('should send 200 when logged in with correct param', function(done){
+			  r.get(path).auth("john","1234").query({abc:"abc"}).expect(200,done);
+			});
+		});
+		describe('with login and param option', function(){
+			before(function(){
+			  path = '/secure/loginParam';
+			});
+		  it('should send 401 when not logged in', function(done){
+		    r.get(path).query({"private":"true"}).expect(401,done);
+		  });
+		  it('should send 401 when logged in with wrong password', function(done){
+		    r.get(path).auth("john","nopass").query({"private":"true"}).expect(401,done);
+		  });
+			it('should send 403 when logged in but no param', function(done){
+			  r.get(path).auth("john","1234").query({"private":"true"}).expect(403,done);
+			});
+			it('should send 403 when logged in with wrong param', function(done){
+			  r.get(path).auth("john","1234").query({"private":"true","abc":"cba"}).expect(403,done);
+			});
+			it('should send 200 when logged in with correct param', function(done){
+			  r.get(path).auth("john","1234").query({"private":"true","abc":"abc"}).expect(200,done);
+			});
+		});
+	});
 });

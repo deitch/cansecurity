@@ -579,7 +579,7 @@ cansecurity provides you precisely this ability!
 To use declarative authorization, you take two steps:
 
 1. Set up the config file
-2. `app.use()` the authorizer
+2. `app.use(cansec.authorizer(pathToConfigFile))`
 
 #### Config File
 The config file is a simple `json` file. You can name it whatever you want. The file should be a single object, with one key, `routes`, which is an array of arrays.
@@ -597,11 +597,12 @@ The config file is a simple `json` file. You can name it whatever you want. The 
 
 Each route is an array of 4 or 5 parts, as follows:
 
-    [verb,route,[params,]default,condition]
+    [verb,route,[params,][loggedIn,]default,condition]
 
 * verb: string, one of GET PUT POST DELETE, and is case-insensitive
 * route: string, an express-js compatible route, e.g. "/api/user/:user" or "/post/:post/comment/:comment"
-* params: optional object, which will be checked to match the route, e.g. {private:true} or {secret:"true",name:"foo"}
+* params: optional object, which will be checked to match the route, e.g. `{private:true}` or `{secret:"true",name:"foo"}`. If the params match, then the route will be applied, else this route is considered to *not* match and will be ignored. See the examples below and the tests.
+* loggedIn: optional boolean. If true, user **must** be logged in via cansecurity **before** checking authorization. If the user is not logged in, send `401`.
 * default: what the default behaviour should be, one of "deny" or "allow"
 * condition: JavaScript string which should return a condition. If true, then do the opposite of the default behaviour
 
@@ -611,12 +612,18 @@ Here are some examples. In all cases, "deny access" means "send 401"
 // when GET /api/user, deny access unless req.user.roles.admin === true
 ["GET","/api/user","deny","req.user.roles.admin === true"],
 
+// when GET /api/user, require logged in, and if logged in deny access unless req.user.roles.admin === true
+["GET","/api/user",true,"deny","req.user.roles.admin === true"],
+
 // when GET /api/user/:user, deny access unless req.user.roles.admin === true, OR req.user.id === req.param('user')
 ["GET","/api/user/:user","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
 
 // when GET /api/user/:user AND ?private=true (or in the body), deny unless req.user.roles.admin === true || req.user.id === req.param('user')
 //     if private !== true (or is unset or anything else), then this rule is not applied, and access is allowed
 ["GET","/api/user/:user",{"private":"true"},"deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
+
+// same as previous example, but check for user logged in first
+["GET","/api/user/:user",{"private":"true"},true,"deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
 
 // when PUT /api/user/:user, deny unless req.user.roles.admin === true || req.user.id === req.param('user')
 ["PUT","/api/user/:user","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
@@ -627,6 +634,28 @@ Here are some examples. In all cases, "deny access" means "send 401"
 // when PUT /api/user/:user/roles, deny unless req.user.roles.admin === true
 ["PUT","/api/user/:user/roles","deny","req.user.roles.admin === true"]
 ````
+
+#### What It Returns
+The authorizer has one of three possible results:
+
+* Send `401` if authentication is required and the user is not logged in
+* Send `403` if the route matches and "allow" is the result, one of:
+* * default "deny" and the condition passes
+* * default "allow" and the condition fails
+* `next()`
+
+The result is "allow" if:
+
+* default is "deny" and the condition passes; OR
+* default is "allow" and the condition fails
+
+The logic is as follows:
+
+1. Does the route match? If not, `next()`; else
+2. Does the route require authentication? If yes and the user is not logged in, send `401`; else
+3. Does the rule "allow", i.e. default "deny" and condition passes, or default "allow" and condition fails? If yes, `next()`; else
+4. Send `403`
+
 
 #### Use the authorizer
 Simple:

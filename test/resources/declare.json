@@ -11,6 +11,9 @@
 		["GET","/secure/parameter",{"private":"true"},"deny","false === true"],
 		
 		["GET","/secure/chainedParameter",{"private":"true"},"deny","false === true"],
-		["GET","/secure/chainedParameter","deny","req.param('abc') === 'abc'"]
+		["GET","/secure/chainedParameter","deny","req.param('abc') === 'abc'"],
+		
+		["GET","/secure/login",true,"deny","req.param('abc') === 'abc'"],
+		["GET","/secure/loginParam",{"private":"true"},true,"deny","req.param('abc') === 'abc'"]
 	]	
 }
