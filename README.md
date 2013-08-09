@@ -55,12 +55,12 @@ And if you prefer declarative authorization, even easier:
 		{
 			"routes": [
 			  // [verb,path,default,[test params,] test condition]
-				["GET","/api/user","deny","req.user.roles.admin === true"],
-				["GET","/api/user/:user","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
-				["GET","/api/user/:user",{"private":"true"},"deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
-				["PUT","/api/user/:user","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
-				["GET","/api/user/:user/roles","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
-				["PUT","/api/user/:user/roles","deny","req.user.roles.admin === true"]
+				["GET","/api/user","deny","user.roles.admin === true"],
+				["GET","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
+				["GET","/api/user/:user",{"private":"true"},"deny","user.roles.admin === true || user.id === req.param('user')"],
+				["PUT","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
+				["GET","/api/user/:user/roles","deny","user.roles.admin === true || user.id === req.param('user')"],
+				["PUT","/api/user/:user/roles","deny","user.roles.admin === true"]
 			]	
 		}
 		
@@ -540,12 +540,12 @@ But it still requires lots of code in the routes. What if you could just declare
 {
 	"routes": [
 	  // [verb,path,default,[test params,] test condition]
-		["GET","/api/user","deny","req.user.roles.admin === true"],
-		["GET","/api/user/:user","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
-		["GET","/api/user/:user",{"private":"true"},"deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
-		["PUT","/api/user/:user","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
-		["GET","/api/user/:user/roles","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
-		["PUT","/api/user/:user/roles","deny","req.user.roles.admin === true"]
+		["GET","/api/user","deny","user.roles.admin === true"],
+		["GET","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
+		["GET","/api/user/:user",{"private":"true"},"deny","user.roles.admin === true || user.id === req.param('user')"],
+		["PUT","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
+		["GET","/api/user/:user/roles","deny","user.roles.admin === true || user.id === req.param('user')"],
+		["PUT","/api/user/:user/roles","deny","user.roles.admin === true"]
 	]	
 }
 ````
@@ -586,31 +586,37 @@ Each route is an array of 4 or 5 parts, as follows:
 Here are some examples. In all cases, "deny access" means "send 401"
 
 ````JavaScript
-// when GET /api/user, deny access unless req.user.roles.admin === true
-["GET","/api/user","deny","req.user.roles.admin === true"],
+// when GET /api/user, deny access unless user.roles.admin === true
+["GET","/api/user","deny","user.roles.admin === true"],
 
-// when GET /api/user, require logged in, and if logged in deny access unless req.user.roles.admin === true
-["GET","/api/user",true,"deny","req.user.roles.admin === true"],
+// when GET /api/user, require logged in, and if logged in deny access unless user.roles.admin === true
+["GET","/api/user",true,"deny","user.roles.admin === true"],
 
-// when GET /api/user/:user, deny access unless req.user.roles.admin === true, OR req.user.id === req.param('user')
-["GET","/api/user/:user","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
+// when GET /api/user/:user, deny access unless user.roles.admin === true, OR user.id === req.param('user')
+["GET","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
 
-// when GET /api/user/:user AND ?private=true (or in the body), deny unless req.user.roles.admin === true || req.user.id === req.param('user')
+// when GET /api/user/:user AND ?private=true (or in the body), deny unless user.roles.admin === true || user.id === req.param('user')
 //     if private !== true (or is unset or anything else), then this rule is not applied, and access is allowed
-["GET","/api/user/:user",{"private":"true"},"deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
+["GET","/api/user/:user",{"private":"true"},"deny","user.roles.admin === true || user.id === req.param('user')"],
 
 // same as previous example, but check for user logged in first
-["GET","/api/user/:user",{"private":"true"},true,"deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
+["GET","/api/user/:user",{"private":"true"},true,"deny","user.roles.admin === true || user.id === req.param('user')"],
 
-// when PUT /api/user/:user, deny unless req.user.roles.admin === true || req.user.id === req.param('user')
-["PUT","/api/user/:user","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
+// when PUT /api/user/:user, deny unless user.roles.admin === true || user.id === req.param('user')
+["PUT","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
 
-// when GET /api/user/:user/roles, deny unless req.user.roles.admin === true || req.user.id === req.param('user')
-["GET","/api/user/:user/roles","deny","req.user.roles.admin === true || req.user.id === req.param('user')"],
+// when GET /api/user/:user/roles, deny unless user.roles.admin === true || user.id === req.param('user')
+["GET","/api/user/:user/roles","deny","user.roles.admin === true || user.id === req.param('user')"],
 
-// when PUT /api/user/:user/roles, deny unless req.user.roles.admin === true
-["PUT","/api/user/:user/roles","deny","req.user.roles.admin === true"]
+// when PUT /api/user/:user/roles, deny unless user.roles.admin === true
+["PUT","/api/user/:user/roles","deny","user.roles.admin === true"]
 ````
+
+#### Context for the Condition
+The condition string is run inside its own new context. Besides the usual nodejs environment, it has the following variable available to it:
+
+1. `req`: the actual express `req` object, normally found on each route whose signature is `function(req,res,next)`.
+2. `user`: the user object if you used cansecurity authentication. This is the equivalent of calling `cansec.getUser(req)`.
 
 #### What It Returns
 The authorizer has one of three possible results:

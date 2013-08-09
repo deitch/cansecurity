@@ -32,6 +32,14 @@ describe('declarative authorization', function(){
   it('should allow no path match', function(done){
     r.get("/foo").expect(200,done);
   });
+	describe('user in condition', function(){
+	  it('should deny if user is not logged in', function(done){
+	    r.get('/secure/loggedIn').expect(403,done);
+	  });
+	  it('should allow if user is logged in', function(done){
+	    r.get('/secure/loggedIn').auth("john","1234").expect(200,done);
+	  });
+	});
 	describe('deny vs allow', function(){
 		it('should always deny denyAll', function(done){
 		  r.get("/secure/denyAll").expect(403,done);
@@ -78,6 +86,14 @@ describe('declarative authorization', function(){
 		it('should pass second rule if parameter is not set but has correct data for second rule', function(done){
 		  r.get('/secure/chainedParameter').query({abc:'abc'}).expect(200,done);
 		});
+	});
+	describe('path parameter', function(){
+	  it('should deny the route if param not matched', function(done){
+	    r.get('/secure/user/10').expect(403,done);
+	  });
+	  it('should allow the route if param is matched', function(done){
+	    r.get('/secure/user/1').expect(200,done);
+	  });
 	});
 	describe('login required', function(){
 		describe('with only login option', function(){

@@ -1,6 +1,6 @@
 {
 	"routes": [
-		["GET","/secure/loggedIn","deny","req.user !== undefined && req.user !== null"],
+		["GET","/secure/loggedIn","deny","user !== undefined && user !== null"],
 		["GET","/secure/denyAll","deny","false === true"],
 		["GET","/secure/allowAll","allow","false === true"],
 		["GET","/secure/deny","deny","req.param('abc') === 'abc'"],
@@ -14,6 +14,8 @@
 		["GET","/secure/chainedParameter","deny","req.param('abc') === 'abc'"],
 		
 		["GET","/secure/login",true,"deny","req.param('abc') === 'abc'"],
-		["GET","/secure/loginParam",{"private":"true"},true,"deny","req.param('abc') === 'abc'"]
+		["GET","/secure/loginParam",{"private":"true"},true,"deny","req.param('abc') === 'abc'"],
+		
+		["GET","/secure/user/:user","deny","req.param('user') === '1'"]
 	]	
 }
