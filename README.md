@@ -66,27 +66,8 @@ And if you prefer declarative authorization, even easier:
 		
 
 
-#### Changes to version 0.5.0
-These notes apply to anyone using cansecurity *prior* to v0.5.0. These changes may be breaking, so read carefully. 
-
-##### express 3.x required
-Prior to version 0.5.0 (and preferably prior to 0.4.8), cansecurity worked with express 2.x and 3.x, although the full testing regimen worked properly only in express 2.x. Beginning with 0.5.0, only express 3.x will work.
-
-##### validatePassword and getUser consolidated into 
-In versions of cansecurity prior to 0.5.0, there were two functions passed to `init()`:
-
-* `validatePassword()` was called when the user authenticated with credentials to be checked.
-* `getUser()` was called when the user was authenticated *already* using a token or session, and we just needed the user object.
-
-As of version 0.5.0, these are consolidated into a single `validate()` function. Please check the documentation below.
-
-Until version 1.0 of cansecurity, the legacy functions will continue to operate, if deprecated, under the following circumstances:
-
-    IF `validate()` is `undefined`, AND (`validatePassword()` and `getUser()`) are present, THEN cansecurity will use the old API. 
-
-		IF `validate()` is defined, THEN (`validatePassword()` and `getUser()`) will be ignored, whether present or not.
-
-Beginning with cansecurity 1.0, the old API will not function at all.
+#### Changes
+For any breaking changes, please see the end of this README.
 
 ### Authentication
 cansecurity will manage your user authentication, including managing stateless sessions. It can use either native express sessions and or its own **stateless** sessions. cansecurity stateless sessions can keep a user logged in automatically across multiple nodejs instances, essentially creating free single-sign-on.
@@ -185,14 +166,14 @@ cansec.init({
 ````
 
 ### Unauthenticated Errors
-cansecurity will never directly return errors. It will authenticate a user, or fail to do so, set request["X-CS-Auth"], and request.session["X-CS-Auth"] if sessions are enabled, and then call next() to jump to the next middleware. 
+When authnetication fails, cansecurity will directly return 401 with the message "unauthenticated". 
 
-cansecurity **will** call next(error) in only the following case: 
+* If authentication is required and succeeds, it will set request["X-CS-Auth"], and request.session["X-CS-Auth"] if sessions are enabled, and then call next() to jump to the next middleware. 
+* If authentication is required and fails, it will return `401` with the text message `unauthenticated`
+* If authentication is **not** required, it will jump to the next middleware 
+
 If the user has provided HTTP Basic Authentication credentials in the form of username/password **and** the authentication via `validate()` fails. In that case, cansecurity will call 
 
-    next({status: 401, message:"some message"});
-
-It is up to you to make sure that you use expressjs's app.use() error handler to correctly handle this error.
 
 ### Why We Need the "Password" in the Validate() Callback
 The callback to `validate()` expects you to return a "pass", or any user-unique string. Although this is never given to any other function, let alone to the client, why is the "pass" necessary? 
@@ -347,13 +328,9 @@ app.get("/user",cansec.ifParam("secret","true").restrictToRoles("admin"),routeHa
 ````
 
 #### Unauthorized Errors
-cansecurity authorization will never directly return errors. If a restrictTo* middleware is called, and authorization fails, it will call next(error). The error will always be structured as follows:
+cansecurity authorization will directly return a `403` and message `unauthorized` if authorization is required, i.e. a restrictTo* middleware is called, **and** fails. 
 
-    next({status: 401, message:"unauthorized"});
-
-Obviously, authentication comes before authorization, and if the user fails to authenticated, you may get a 401 from the authentication section without ever reaching authorization.
-
-It is up to you to make sure that you use expressjs's app.user() error handler to correctly handle this error.
+Obviously, authentication comes before authorization, and if the user fails to authenticate, you may get a 401 from the authentication section without ever trying authorization.
 
 #### Middleware API 
 The following authorization middleware methods are available. Each one is followed by an example. There are two sections
@@ -666,6 +643,35 @@ Simple:
 Done!
 
 
-
 ## Testing
 To run the tests, from the root directory, run `npm test`.
+
+## Breaking Changes
+#### Changes to version 0.6.0
+Prior to version 0.6.0, cansecurity *sometimes* would send back a 401 or 403 as `res.send(401,"unauthenticated")` or `res.send(403,"unauthorized")`, and sometimes would just call `next({status:401,message:"unauthenticated"})` or `next({status:403,message:"unauthorized"})`.
+
+Beginnign with version 0.6.0, cansecurity will **always** return 401 if authentication is required and not present / fails, and will **always** return a 403 if authorization is required and fails.
+
+This makes the results far more consistent.
+
+#### Changes to version 0.5.0
+These notes apply to anyone using cansecurity *prior* to v0.5.0. These changes may be breaking, so read carefully. 
+
+##### express 3.x required
+Prior to version 0.5.0 (and preferably prior to 0.4.8), cansecurity worked with express 2.x and 3.x, although the full testing regimen worked properly only in express 2.x. Beginning with 0.5.0, only express 3.x will work.
+
+##### validatePassword and getUser consolidated into 
+In versions of cansecurity prior to 0.5.0, there were two functions passed to `init()`:
+
+* `validatePassword()` was called when the user authenticated with credentials to be checked.
+* `getUser()` was called when the user was authenticated *already* using a token or session, and we just needed the user object.
+
+As of version 0.5.0, these are consolidated into a single `validate()` function. Please check the documentation below.
+
+Until version 1.0 of cansecurity, the legacy functions will continue to operate, if deprecated, under the following circumstances:
+
+    IF `validate()` is `undefined`, AND (`validatePassword()` and `getUser()`) are present, THEN cansecurity will use the old API. 
+
+		IF `validate()` is defined, THEN (`validatePassword()` and `getUser()`) will be ignored, whether present or not.
+
+Beginning with cansecurity 1.0, the old API will not function at all.

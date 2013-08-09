@@ -2,7 +2,7 @@
 /*global before, it, describe */
 var express = require('express'), app = express(), request = require('supertest'), _ = require('lodash'), 
 cansec = require('./resources/cs').init(), errorHandler = require('./resources/error'),
-r, path, q, unauthenticated = {message:"unauthenticated"}, unauthorized = {message:"unauthorized"},
+r, path, q, unauthenticated = "unauthenticated", unauthorized = "unauthorized",
 send200 = function(req,res,next){
 	// send a 200
 	res.send(200);
