@@ -8,10 +8,11 @@
 		["GET","/secure/denyError","deny","req.foo.a.b.c.d === 'q'"],
 		["GET","/secure/allowError","allow","req.foo.a.b.c.d === 'q'"],
 		
+		["GET","/secure/parameter","deny","true === true"],
 		["GET","/secure/parameter",{"private":"true"},"deny","false === true"],
 		
-		["GET","/secure/chainedParameter",{"private":"true"},"deny","false === true"],
 		["GET","/secure/chainedParameter","deny","req.param('abc') === 'abc'"],
+		["GET","/secure/chainedParameter",{"private":"true"},"deny","false === true"],
 		
 		["GET","/secure/login",true,"deny","req.param('abc') === 'abc'"],
 		["GET","/secure/loginParam",{"private":"true"},true,"deny","req.param('abc') === 'abc'"],

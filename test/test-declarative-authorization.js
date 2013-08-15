@@ -72,7 +72,7 @@ describe('declarative authorization', function(){
 	  it('should ignore rule if parameter is not set', function(done){
 	    r.get('/secure/parameter').expect(200,done);
 	  });
-		it('should implement rule if parameter is set', function(done){
+		it('should implement rule if parameter is set even if pass first rule', function(done){
 		  r.get('/secure/parameter').query({"private":"true"}).expect(403,done);
 		});
 	});
