@@ -615,8 +615,11 @@ Here are some examples. In all cases, "deny access" means "send 401"
 #### Context for the Condition
 The condition string is run inside its own new context. Besides the usual nodejs environment, it has the following variable available to it:
 
-1. `req`: the actual express `req` object, normally found on each route whose signature is `function(req,res,next)`.
-2. `user`: the user object if you used cansecurity authentication. This is the equivalent of calling `cansec.getUser(req)`.
+1. `req`: the actual express `req` object, normally found on each route whose signature is `function(req,res,next)`. 
+2. `request`: an alias for `req`
+3. `user`: the user object if you used cansecurity authentication. This is the equivalent of calling `cansec.getUser(req)`.
+4. `_`: the underscore/lodash utility functions. cansecurity actually uses [lodash](http://lodash.com)
+
 
 #### What It Returns
 The authorizer has one of three possible results:

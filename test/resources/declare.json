@@ -17,6 +17,8 @@
 		["GET","/secure/login",true,"deny","req.param('abc') === 'abc'"],
 		["GET","/secure/loginParam",{"private":"true"},true,"deny","req.param('abc') === 'abc'"],
 		
-		["GET","/secure/user/:user","deny","req.param('user') === '1'"]
+		["GET","/secure/user/:user","deny","req.param('user') === '1'"],
+
+		["GET","/secure/dash","deny","_.contains([1,2,3],1)"]
 	]	
 }

@@ -40,6 +40,11 @@ describe('declarative authorization', function(){
 	    r.get('/secure/loggedIn').auth("john","1234").expect(200,done);
 	  });
 	});
+	describe('dash in condition', function(){
+	  it('should accept condition with dash', function(done){
+	    r.get('/secure/dash').expect(200,done);
+	  });
+	});
 	describe('deny vs allow', function(){
 		it('should always deny denyAll', function(done){
 		  r.get("/secure/denyAll").expect(403,done);
