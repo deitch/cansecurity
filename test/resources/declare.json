@@ -19,6 +19,8 @@
 		
 		["GET","/secure/user/:user","deny","req.param('user') === '1'"],
 
-		["GET","/secure/dash","deny","_.contains([1,2,3],1)"]
+		["GET","/secure/dash","deny","_.contains([1,2,3],1)"],
+		
+		["GET","/secure/request","deny","request.url !== null"]
 	]	
 }

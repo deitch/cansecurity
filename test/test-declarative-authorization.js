@@ -45,6 +45,11 @@ describe('declarative authorization', function(){
 	    r.get('/secure/dash').expect(200,done);
 	  });
 	});
+	describe('request as alias to req', function(){
+	  it('should accept condition with "request" in it', function(done){
+	    r.get('/secure/request').expect(200,done);
+	  });
+	});
 	describe('deny vs allow', function(){
 		it('should always deny denyAll', function(done){
 		  r.get("/secure/denyAll").expect(403,done);
