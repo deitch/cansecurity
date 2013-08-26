@@ -50,24 +50,15 @@ describe('declarative authorization', function(){
 	    r.get('/secure/request').expect(200,done);
 	  });
 	});
-	describe('deny vs allow', function(){
+	describe('basic deny', function(){
 		it('should always deny denyAll', function(done){
 		  r.get("/secure/denyAll").expect(403,done);
-		});
-		it('should always allow allowAll', function(done){
-		  r.get("/secure/allowAll").expect(200,done);
 		});
 		it('should allow when deny default but rule matched', function(done){
 		  r.get('/secure/deny').query({abc:'abc'}).expect(200,done);
 		});
 		it('should deny when deny default but rule unmatched', function(done){
 		  r.get('/secure/deny').expect(403,done);
-		});
-		it('should allow when allow default but rule unmatched', function(done){
-		  r.get('/secure/allow').expect(200,done);		  
-		});
-		it('should deny when allow default but rule unmatched', function(done){
-		  r.get('/secure/allow').query({abc:'abc'}).expect(403,done);
 		});
 	});
 	describe('errors as rule unmatched', function(){

@@ -1,26 +1,23 @@
 {
 	"routes": [
-		["GET","/secure/loggedIn","deny","user !== undefined && user !== null"],
-		["GET","/secure/denyAll","deny","false === true"],
-		["GET","/secure/allowAll","allow","false === true"],
-		["GET","/secure/deny","deny","req.param('abc') === 'abc'"],
-		["GET","/secure/allow","allow","req.param('abc') === 'abc'"],
-		["GET","/secure/denyError","deny","req.foo.a.b.c.d === 'q'"],
-		["GET","/secure/allowError","allow","req.foo.a.b.c.d === 'q'"],
+		["GET","/secure/loggedIn","user !== undefined && user !== null"],
+		["GET","/secure/denyAll","false === true"],
+		["GET","/secure/deny","req.param('abc') === 'abc'"],
+		["GET","/secure/denyError","req.foo.a.b.c.d === 'q'"],
 		
-		["GET","/secure/parameter","deny","true === true"],
-		["GET","/secure/parameter",{"private":"true"},"deny","false === true"],
+		["GET","/secure/parameter","true === true"],
+		["GET","/secure/parameter",{"private":"true"},"false === true"],
 		
-		["GET","/secure/chainedParameter","deny","req.param('abc') === 'abc'"],
-		["GET","/secure/chainedParameter",{"private":"true"},"deny","false === true"],
+		["GET","/secure/chainedParameter","req.param('abc') === 'abc'"],
+		["GET","/secure/chainedParameter",{"private":"true"},"false === true"],
 		
-		["GET","/secure/login",true,"deny","req.param('abc') === 'abc'"],
-		["GET","/secure/loginParam",{"private":"true"},true,"deny","req.param('abc') === 'abc'"],
+		["GET","/secure/login",true,"req.param('abc') === 'abc'"],
+		["GET","/secure/loginParam",{"private":"true"},true,"req.param('abc') === 'abc'"],
 		
-		["GET","/secure/user/:user","deny","req.param('user') === '1'"],
+		["GET","/secure/user/:user","req.param('user') === '1'"],
 
-		["GET","/secure/dash","deny","_.contains([1,2,3],1)"],
+		["GET","/secure/dash","_.contains([1,2,3],1)"],
 		
-		["GET","/secure/request","deny","request.url !== null"]
+		["GET","/secure/request","request.url !== null"]
 	]	
 }

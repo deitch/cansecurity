@@ -619,6 +619,61 @@ The condition string is run inside its own new context. Besides the usual nodejs
 2. `request`: an alias for `req`
 3. `user`: the user object if you used cansecurity authentication. This is the equivalent of calling `cansec.getUser(req)`.
 4. `_`: the underscore/lodash utility functions. cansecurity actually uses [lodash](http://lodash.com)
+5. `item`: the item loaded, if any, by the loader functions passed to `cansec.init()`; see below.
+
+#### Loading Data
+You have the option, but not the requirement, to load data before passing your route through the declarative authorizer. 
+
+The data is loaded by passing a loader to `cansec.init()`:
+
+````JavaScript
+cansec.init({
+	loader:  {
+		user: function(req,res,next) {
+		},
+		group: function(req,res,next) {
+		}
+	}
+});
+````
+
+Each loader function has two simple jobs to do:
+
+1. Load relevant data into `req.cansecurity.item`
+2. Call `next`
+
+`req.cansecurity` will already be available as an object. `item` can be an object, a string, an array, null, undefined, boolean, or anything at all that you want to pass to your conditions.
+
+The full suite of `request`, `response` and `next` methods is available. Thus, you could easily call `res.send(400)` if you have an error and do not wish to proceed, or perhaps `next(error)`. Similarly, `req.param(someParam)` is also available.
+
+Here is an example:
+
+````JavaScript
+cansec.init({
+	loader: {
+		group: function(req,res,next) {
+			models.group.find(someParam,function(err,data){
+				req.cansecurity.item = data;
+				next();
+			});
+		}
+	}
+});
+````
+
+And the declarative:
+
+````JavaScript
+{
+	routes: [
+		["GET","/api/group/:group",true,"group","_.contains(item.members,user.id)"]
+	]
+}
+````
+
+
+
+
 
 
 #### What It Returns
@@ -656,6 +711,21 @@ Done!
 To run the tests, from the root directory, run `npm test`.
 
 ## Breaking Changes
+
+#### Changes to version 0.6.4
+Declarative authorization no longer has an option to "allow" or "deny" by default. **All** rules are "deny" unless the condition passes. It is very easy to invert the condition and make it pass except in certain circumstances.
+
+    ["GET","/secure/path",true,"allow","a === b"]
+		
+Can just as easily be written as
+
+    ["GET","/secure/path",true,"deny","a !== b"]
+
+Or more simply
+
+    ["GET","/secure/path",true,"a !== b"]
+
+
 #### Changes to version 0.6.0
 Prior to version 0.6.0, cansecurity *sometimes* would send back a 401 or 403 as `res.send(401,"unauthenticated")` or `res.send(403,"unauthorized")`, and sometimes would just call `next({status:401,message:"unauthenticated"})` or `next({status:403,message:"unauthorized"})`.
 
