@@ -138,4 +138,12 @@ describe('declarative authorization', function(){
 			});
 		});
 	});
+	describe('loader', function(){
+	  it('should return 500 for missing loader', function(done){
+		  r.get('/secure/badLoader').expect(500,done);
+	  });
+	  it('should return 200 for good loader', function(done){
+		  r.get('/secure/loader').expect(200,done);
+	  });
+	});
 });

@@ -31,6 +31,12 @@ module.exports = {
 					callback(false,null,"invalidpass");
 				}
 			},
+			loader: {
+				group: function (req,res,next) {
+					req.cansecurity.item = 1;
+					next();
+				}
+			},
 			sessionKey: SESSIONKEY			
 		});
 	},

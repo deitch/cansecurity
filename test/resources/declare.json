@@ -18,6 +18,9 @@
 
 		["GET","/secure/dash","_.contains([1,2,3],1)"],
 		
-		["GET","/secure/request","request.url !== null"]
+		["GET","/secure/request","request.url !== null"],
+
+		["GET","/secure/badLoader","nothing","item === 1"],
+		["GET","/secure/loader","group","item === 1"]
 	]	
 }

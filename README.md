@@ -672,7 +672,7 @@ And the declarative:
 ````
 
 
-
+**Note:** Any route where login is required, login will be validated *before* running the loader.
 
 
 
