@@ -87,6 +87,9 @@ describe('declarative authorization', function(){
 		it('should pass second rule if parameter is not set but has correct data for second rule', function(done){
 		  r.get('/secure/chainedParameter').query({abc:'abc'}).expect(200,done);
 		});
+		it('should require all rules to pass when parameters exist', function(done){
+	    r.get('/secure/chainedParameter').query({"private":true,"abc":"abc"}).expect(403,done);
+		});
 	});
 	describe('path parameter', function(){
 	  it('should deny the route if param not matched', function(done){
