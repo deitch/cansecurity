@@ -16,6 +16,16 @@
 		"mocha":"1.x",
 		"supertest":"0.x"	
 	},
+	"keywords":[
+		"security",
+		"node",
+		"nodejs",
+		"express",
+		"cansecurity",
+		"authentication",
+		"authorization",
+		"declarative"
+	],
 	"scripts":{
 		"test":"node_modules/.bin/mocha"
 	},
