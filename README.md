@@ -55,12 +55,12 @@ And if you prefer declarative authorization, even easier:
 		{
 			"routes": [
 			  // [verb,path,default,[test params,] test condition]
-				["GET","/api/user","deny","user.roles.admin === true"],
-				["GET","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
-				["GET","/api/user/:user",{"private":"true"},"deny","user.roles.admin === true || user.id === req.param('user')"],
-				["PUT","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
-				["GET","/api/user/:user/roles","deny","user.roles.admin === true || user.id === req.param('user')"],
-				["PUT","/api/user/:user/roles","deny","user.roles.admin === true"]
+				["GET","/api/user","user.roles.admin === true"],
+				["GET","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
+				["GET","/api/user/:user",{"private":"true"},"user.roles.admin === true || user.id === req.param('user')"],
+				["PUT","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
+				["GET","/api/user/:user/roles","user.roles.admin === true || user.id === req.param('user')"],
+				["PUT","/api/user/:user/roles","user.roles.admin === true"]
 			]	
 		}
 		
@@ -539,13 +539,13 @@ But it still requires lots of code in the routes. What if you could just declare
 ````JavaScript
 {
 	"routes": [
-	  // [verb,path,default,[test params,] test condition]
-		["GET","/api/user","deny","user.roles.admin === true"],
-		["GET","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
-		["GET","/api/user/:user",{"private":"true"},"deny","user.roles.admin === true || user.id === req.param('user')"],
-		["PUT","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
-		["GET","/api/user/:user/roles","deny","user.roles.admin === true || user.id === req.param('user')"],
-		["PUT","/api/user/:user/roles","deny","user.roles.admin === true"]
+	  // [verb,path,[test params,][require logged in],[loader,]test condition]
+		["GET","/api/user",true,"user.roles.admin === true"],
+		["GET","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
+		["GET","/api/user/:user",{"private":"true"},true,"user.roles.admin === true || user.id === req.param('user')"],
+		["PUT","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
+		["GET","/api/user/:user/roles","user.roles.admin === true || user.id === req.param('user')"],
+		["PUT","/api/user/:user/roles","user.roles.admin === true"]
 	]	
 }
 ````
@@ -574,42 +574,45 @@ The config file is a simple `json` file. You can name it whatever you want. The 
 
 Each route is an array of 4 or 5 parts, as follows:
 
-    [verb,route,[params,][loggedIn,]default,condition]
+    [verb,route,[params,][loggedIn,][loader,]condition]
 
 * verb: string, one of GET PUT POST DELETE, and is case-insensitive
 * route: string, an express-js compatible route, e.g. "/api/user/:user" or "/post/:post/comment/:comment"
 * params: optional object, which will be checked to match the route, e.g. `{private:true}` or `{secret:"true",name:"foo"}`. If the params match, then the route will be applied, else this route is considered to *not* match and will be ignored. See the examples below and the tests.
 * loggedIn: optional boolean. If true, user **must** be logged in via cansecurity **before** checking authorization. If the user is not logged in, send `401`.
-* default: what the default behaviour should be, one of "deny" or "allow"
+* loader: name of a loader in your initializer that should run when the verb/route/params/loggedIn are matched, but before testing the condition
 * condition: JavaScript string which should return a condition. If true, then do the opposite of the default behaviour
 
-Here are some examples. In all cases, "deny access" means "send 401"
+Here are some examples.
 
 ````JavaScript
-// when GET /api/user, deny access unless user.roles.admin === true
-["GET","/api/user","deny","user.roles.admin === true"],
+// when GET /api/user, send 403 unless user.roles.admin === true
+["GET","/api/user","user.roles.admin === true"],
 
-// when GET /api/user, require logged in, and if logged in deny access unless user.roles.admin === true
-["GET","/api/user",true,"deny","user.roles.admin === true"],
+// when GET /api/user, if not logged in, send 401; if logged in send 403 unless user.roles.admin === true
+["GET","/api/user",true,"user.roles.admin === true"],
 
-// when GET /api/user/:user, deny access unless user.roles.admin === true, OR user.id === req.param('user')
-["GET","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
+// when GET /api/user/:user, send 403 unless user.roles.admin === true, OR user.id === req.param('user')
+["GET","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
 
-// when GET /api/user/:user AND ?private=true (or in the body), deny unless user.roles.admin === true || user.id === req.param('user')
+// when GET /api/user/:user AND ?private=true (or in the body), send 403 unless user.roles.admin === true || user.id === req.param('user')
 //     if private !== true (or is unset or anything else), then this rule is not applied, and access is allowed
-["GET","/api/user/:user",{"private":"true"},"deny","user.roles.admin === true || user.id === req.param('user')"],
+["GET","/api/user/:user",{"private":"true"},"user.roles.admin === true || user.id === req.param('user')"],
 
-// same as previous example, but check for user logged in first
-["GET","/api/user/:user",{"private":"true"},true,"deny","user.roles.admin === true || user.id === req.param('user')"],
+// same as previous example, but send 401 if !logged in, then continue from previous example
+["GET","/api/user/:user",{"private":"true"},true,"user.roles.admin === true || user.id === req.param('user')"],
 
-// when PUT /api/user/:user, deny unless user.roles.admin === true || user.id === req.param('user')
-["PUT","/api/user/:user","deny","user.roles.admin === true || user.id === req.param('user')"],
+// when PUT /api/user/:user, send 403 unless user.roles.admin === true || user.id === req.param('user')
+["PUT","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
 
-// when GET /api/user/:user/roles, deny unless user.roles.admin === true || user.id === req.param('user')
-["GET","/api/user/:user/roles","deny","user.roles.admin === true || user.id === req.param('user')"],
+// when GET /api/user/:user/roles, send 403 unless user.roles.admin === true || user.id === req.param('user')
+["GET","/api/user/:user/roles","user.roles.admin === true || user.id === req.param('user')"],
 
-// when PUT /api/user/:user/roles, deny unless user.roles.admin === true
-["PUT","/api/user/:user/roles","deny","user.roles.admin === true"]
+// when PUT /api/user/:user/roles, send 403 unless user.roles.admin === true
+["PUT","/api/user/:user/roles","user.roles.admin === true"]
+
+// when PUT /api/user/:user/roles, run the "roles" loader, then send 403 unless user.roles.admin === true || item.name === 'me'
+["PUT","/api/user/:user/roles","roles","(user.roles.admin === true) || (item.name === 'me')"]
 ````
 
 #### Context for the Condition
@@ -680,22 +683,15 @@ And the declarative:
 The authorizer has one of three possible results:
 
 * Send `401` if authentication is required and the user is not logged in
-* Send `403` if the route matches and "allow" is the result, one of:
-* * default "deny" and the condition passes
-* * default "allow" and the condition fails
+* Send `403` if the route matches the condition fails
 * `next()`
-
-The result is "allow" if:
-
-* default is "deny" and the condition passes; OR
-* default is "allow" and the condition fails
 
 The logic is as follows:
 
 1. Does the route match? If not, `next()`; else
 2. Does the route require authentication? If yes and the user is not logged in, send `401`; else
-3. Does the rule "allow", i.e. default "deny" and condition passes, or default "allow" and condition fails? If yes, `next()`; else
-4. Send `403`
+3. Does the condition evaluate to `true` and not have any errors? If not, send `403`; else
+4. `next()`
 
 
 #### Use the authorizer
