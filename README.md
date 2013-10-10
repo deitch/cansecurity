@@ -192,8 +192,11 @@ With each request, the following algorithm is followed:
 
 Note that failing to get an authentication for all of the above steps does **not** necessarily indicate that a 401 should be sent back. It is entirely possible that the user is accessing a resource that does not require authentication! This part of the cansecurity library is entirely about authentication; authorization is a different topic.
 
-### The X-CS-Auth Header
-The X-CS-Auth header contains error responses or success tokens. If authentication was successful, by any means, then a new header is generated with each request. This header is of the following format:
+### HTTP Response Headers
+cansecurity passes details about success or failure of authentication in custom `X-` HTTP response headers. Of course, a failed authentication will return a `401`, but the *reason* for failure will be in the appropriate header listed in this section. Similarly, a successful authentication - by *any* means - will allow the request to go through returning a `200`, `201`, `404`, etc., depending on the app. cansecurity will, however, return the session token and logged in user via appropriate HTTP response headers.
+
+#### X-CS-Auth Header
+The X-CS-Auth response header contains error responses or success tokens. If authentication was successful, by any means, then a new header is generated with each request. This header is of the following format:
 
     success=sha1hash:username:expiry
 
@@ -205,6 +208,9 @@ Where:
 Essentially, we are using a message validation algorithm to validate that the username and expiry are, indeed, valid.
 
 Because the auth header is created anew with each request, the expiry window is rolling - x minutes from the last valid request.
+
+#### X-CS-User Header
+The X-CS-User response header contains the actual logged in user when authentication by any means was successful. Normally, it is a JSON-encoded string, but it really depends on what your `validate()` function returns in the `user` parameter of the `callback`.
 
 ### Performance
 Extensive performance testing has not been done. However, all of the algorithms are symmetric, which are very high-performance. The expensive part is validate(), which may require your app to look in a data source or database. However, since the majority of requests will simply hit the local session, the user will be stored locally, and it is not an issue. The hit will only be for the first authentication for each user, as well as when a user switches between nodejs servers using cansecurity stateless sessions.

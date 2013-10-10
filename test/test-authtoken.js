@@ -2,7 +2,8 @@
 /*global before,it,describe */
 var express = require('express'), app = express(), async = require('async'),
 cansec = require('./resources/cs').init(), tokenlib = require('../lib/token'), request = require('supertest'), r,
-authHeader = "X-CS-Auth".toLowerCase(), path = "/public";
+authHeader = "X-CS-Auth".toLowerCase(), userHeader = "X-CS-User".toLowerCase(),
+userInfo = JSON.stringify({name:"john",pass:"1234",age:25,id:"1",roles:["admin"]}), path = "/public";
 
 describe('authtoken', function(){
   before(function(){
@@ -30,11 +31,11 @@ describe('authtoken', function(){
 		successRe = /^success=(([^:]*):([^:]*):([^:]*))$/;
 		async.waterfall([
 			function (cb) {
-				r.get(path).set(authHeader,token).expect(200).expect(authHeader,successRe,cb);
+				r.get(path).set(authHeader,token).expect(200).expect(authHeader,successRe).expect(userHeader,userInfo,cb);
 			},
 			function (res,cb) {
 				var match = res.headers[authHeader].match(successRe);
-				r.get(path).set(authHeader,match[1]).expect(200).expect(authHeader,successRe,cb);
+				r.get(path).set(authHeader,match[1]).expect(200).expect(authHeader,successRe).expect(userHeader,userInfo,cb);
 			},
 			function (res,cb) {
 				var match = res.headers[authHeader].match(successRe);

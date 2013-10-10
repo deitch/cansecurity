@@ -2,7 +2,9 @@
 /*global before,it,describe */
 var express = require('express'), app = express(), cansec = require('./resources/cs').init(), request = require('supertest'),
 path = "/public", r, async = require('async'),
-authHeader = "X-CS-Auth".toLowerCase(), successRe = /^success=(([^:]*):([^:]*):([^:]*))$/, user = "john", pass = "1234";
+authHeader = "X-CS-Auth".toLowerCase(), userHeader = "X-CS-User".toLowerCase(),
+userInfo = JSON.stringify({name:"john",pass:"1234",age:25,id:"1",roles:["admin"]}),
+successRe = /^success=(([^:]*):([^:]*):([^:]*))$/, user = "john", pass = "1234";
 
 describe('local session', function(){
   before(function(){
@@ -12,14 +14,14 @@ describe('local session', function(){
 		app.use(cansec.validate);
 		app.use(app.router);
 		app.get(path,function (req,res,next) {res.send(200);});
-		r = request(app);    
+		r = request(app);
   });
 	it('should work with a local cookie', function(done){
 		async.waterfall([
 		  function (cb) {r.get(path).auth(user,pass).expect(200,cb);},
 			function (res,cb) {
 				var cookie = res.headers["set-cookie"][0];
-				r.get(path).set("cookie",cookie).expect(200).expect(authHeader,successRe,cb);
+				r.get(path).set("cookie",cookie).expect(200).expect(authHeader,successRe).expect(userHeader,userInfo,cb);
 			}
 		],done);
 	});
@@ -34,7 +36,7 @@ describe('local session', function(){
 					cb("Missing user in authHeader");
 				} else {
 					cookie = cookie.split(";")[0];
-					r.get(path).set("cookie",cookie).expect(200).expect(authHeader,successRe,cb);
+					r.get(path).set("cookie",cookie).expect(200).expect(authHeader,successRe).expect(userHeader,userInfo,cb);
 				}
 			}, function (res,cb) {
 				var match = res.headers[authHeader].match(successRe);
