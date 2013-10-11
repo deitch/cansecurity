@@ -26,6 +26,11 @@ describe('authtoken', function(){
 		var token = tokenlib.generate("john","1234",new Date().getTime() + 15*60*1000), re = /^success=/;
 	  r.get(path).set(authHeader,token).expect(200).expect(authHeader,re,done);
 	});
+	it('should accept a valid token with user and date', function(done){
+		var user = "john", expiry = new Date().getTime() + 15*60*1000,
+		token = [tokenlib.generate(user,"1234",expiry),user,expiry].join(":"), re = /^success=/;
+	  r.get(path).set(authHeader,token).expect(200).expect(authHeader,re,done);
+	});
 	it('should allow to reuse a token', function(done){
 	  var user = "john", token = tokenlib.generate(user,"1234",new Date().getTime() + 15*60*1000), 
 		successRe = /^success=(([^:]*):([^:]*):([^:]*))$/;

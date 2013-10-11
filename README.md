@@ -212,6 +212,13 @@ Because the auth header is created anew with each request, the expiry window is 
 #### X-CS-User Header
 The X-CS-User response header contains the actual logged in user when authentication by any means was successful. Normally, it is a JSON-encoded string, but it really depends on what your `validate()` function returns in the `user` parameter of the `callback`.
 
+#### CORS
+Note for usage in CORS situations. cansecurity automatically adds the following header to every response:
+
+    Access-Control-Expose-Headers: X-CS-Auth,X-CS-User
+
+Of course, it does so intelligently, so it adds it to an existing list of headers (does not trounce them) or creates it.
+
 ### Performance
 Extensive performance testing has not been done. However, all of the algorithms are symmetric, which are very high-performance. The expensive part is validate(), which may require your app to look in a data source or database. However, since the majority of requests will simply hit the local session, the user will be stored locally, and it is not an issue. The hit will only be for the first authentication for each user, as well as when a user switches between nodejs servers using cansecurity stateless sessions.
 
