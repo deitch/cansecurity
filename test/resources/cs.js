@@ -40,6 +40,39 @@ module.exports = {
 			sessionKey: SESSIONKEY			
 		});
 	},
+	initEncrypted: function () {
+		return cs.init({
+			validate: function (login,pass,callback) {
+				var found = null;
+				// search for our user
+				_.each(user,function(val,key){
+					var ret = true;
+					if (val.name === login) {
+						found = val;
+						ret = false;
+					}
+					return(ret);
+				});
+				if (!found) {
+					callback(false,null,"invaliduser");
+				} else if (pass === undefined) {
+					callback(true,found,found.name,found.pass);
+				} else if (pass === found.pass) {
+					callback(true,found,found.name,found.pass);
+				} else {
+					callback(false,null,"invalidpass");
+				}
+			},
+			loader: {
+				group: function (req,res,next) {
+					req.cansecurity.item = 1;
+					next();
+				}
+			},
+			sessionKey: SESSIONKEY,
+			encryptHeader: true
+		});
+	},
 	initLegacy: function () {
 		return cs.init({
 			getUser: function(login,success,failure){

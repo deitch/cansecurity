@@ -1,7 +1,7 @@
 /*jslint node:true */
 /*global before,it,describe */
 var express = require('express'), app = express(), async = require('async'),
-cansec = require('./resources/cs').init(), tokenlib = require('../lib/token'), request = require('supertest'), r,
+cansec = require('./resources/cs').initEncrypted(), tokenlib = require('../lib/token'), request = require('supertest'), r,
 authHeader = "X-CS-Auth".toLowerCase(), userHeader = "X-CS-User".toLowerCase(),
 userInfo = JSON.stringify({name:"john",pass:"1234",age:25,id:"1",roles:["admin"]}), path = "/public";
 
@@ -28,12 +28,12 @@ describe('authtoken', function(){
 	});
 	it('should accept a valid token with user and date', function(done){
 		var user = "john", expiry = new Date().getTime() + 15*60*1000,
-		token = [tokenlib.generate(user,"1234",expiry),user,expiry].join(":"), re = /^success=/;
+		token = tokenlib.generate(user,"1234",expiry), re = /^success=/;
 	  r.get(path).set(authHeader,token).expect(200).expect(authHeader,re,done);
 	});
 	it('should allow to reuse a token', function(done){
 	  var user = "john", token = tokenlib.generate(user,"1234",new Date().getTime() + 15*60*1000), 
-		successRe = /^success=(([^:]*):([^:]*):([^:]*))$/;
+		successRe = /^success=(.+)$/;
 		async.waterfall([
 			function (cb) {
 				r.get(path).set(authHeader,token).expect(200).expect(authHeader,successRe).expect(userHeader,userInfo,cb);
@@ -44,6 +44,8 @@ describe('authtoken', function(){
 			},
 			function (res,cb) {
 				var match = res.headers[authHeader].match(successRe);
+				decipherToken = /(([^:]*):([^:]*):([^:]*))$/;
+				match = tokenlib.decipher(match[1]).match(decipherToken);
 				if (match[3] === user) {
 					cb();
 				} else {
@@ -53,3 +55,4 @@ describe('authtoken', function(){
 		],done);
 	});
 });
+
