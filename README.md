@@ -512,6 +512,16 @@ A common pattern, as shown in the last example above, is to retrieve an object, 
 1. It doesn't know where the object is stored. Sure, most use cases store it in the request object somewhere, or possibly the response object, but cansecurity does not want to impose on your application where that is. Thus, it just delegates to you, saying, "give me a function to retrieve the object, if I pass you the request."
 2. It doesn't know what the object looks like. It may be a POJSO (Plain Old JavaScript Object), like above, or one that supports that style, like Spine Models. But what if it is something more complex, a function, with special parameters? What if it is a Backbone Model, which requires using getters? By asking your application to provide a function, it completely abstracts out the issue, and says, "whatever, as long as you pass me back a POJSO, I am happy."
 
+#### Clearing session data
+The function to clear is exposed once Cansecurity is initialized.
+
+```javascript
+app.get("/logout",function(req, res){
+	cansec.clear(req, res);
+	res.send(200);
+});
+```
+
 ### Declarative Authorization
 Declarative authorization is given to drastically clean up your authorizations. Normal cansecurity authorization lets you inject authorization into every route, like so.
 
