@@ -569,7 +569,7 @@ cansecurity provides you precisely this ability!
 To use declarative authorization, you take two steps:
 
 1. Set up the config file
-2. `app.use(cansec.authorizer(pathToConfigFile))`
+2. `app.use(cansec.authorizer(pathToConfigFile,options))`
 
 #### Config File
 The config file is a simple `json` file. You can name it whatever you want. The file should be a single object, with one key, `routes`, which is an array of arrays.
@@ -590,7 +590,7 @@ Each route is an array of 4 or 5 parts, as follows:
     [verb,route,[params,][loggedIn,][loader,]condition]
 
 * verb: string, one of GET PUT POST DELETE, and is case-insensitive
-* route: string, an express-js compatible route, e.g. "/api/user/:user" or "/post/:post/comment/:comment"
+* route: string, an express-js compatible route, e.g. "/api/user/:user" or "/post/:post/comment/:comment". Note that ".:format?" is optional. See "format" later.
 * params: optional object, which will be checked to match the route, e.g. `{private:true}` or `{secret:"true",name:"foo"}`. If the params match, then the route will be applied, else this route is considered to *not* match and will be ignored. See the examples below and the tests.
 * loggedIn: optional boolean. If true, user **must** be logged in via cansecurity **before** checking authorization. If the user is not logged in, send `401`.
 * loader: name of a loader in your initializer that should run when the verb/route/params/loggedIn are matched, but before testing the condition
@@ -710,10 +710,33 @@ The logic is as follows:
 #### Use the authorizer
 Simple:
 
-    app.use(cansec.authorizer(pathToConfigFile));
+    app.use(cansec.authorizer(pathToConfigFile,options));
 		app.use(app.router);
 		
 Done!
+
+
+#### Path Format
+Many REST paths use a "format" extension. In express, it usually looks like this:
+
+````JavaScript
+app.get("/api/user/:user.:format?",fn);
+````
+
+This allows express to handle both `/api/user/10` and `/api/user/10.json`.
+
+cansecurity's declarative authorization *can* handle `.:format?` just by putting it in the path:
+
+    ["GET","/api/user/:user.:format?",{"private":"true"},true,"user.roles.admin === true || user.id === req.param('user')"],
+
+
+But that can get tedious, if you have a lot of routes. To simplify things, one of the options when setting it up is `{format:true}` as follows:
+
+````JavaScript
+app.use(cansec.authorizer(pathToConfigFile,{format:true}));
+````
+
+If `format` is set to `true`, then cansecurity will *automatically* add `.:format?` to every path that does not end in `.:format?` already, or in `/`.
 
 
 ## Testing
