@@ -27,7 +27,7 @@
 		"declarative"
 	],
 	"scripts":{
-		"test":"node_modules/.bin/mocha"
+		"test":"node_modules/.bin/mocha -R spec"
 	},
 	"repository": {
 		"type" : "git",

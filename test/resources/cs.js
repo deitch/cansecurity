@@ -95,6 +95,10 @@ module.exports = {
 			encryptHeader: true
 		} );
 	},
+	initTokenLib: function ( encrypt ) {
+		tokenLib.init(SESSIONKEY, encrypt || false);
+		return tokenLib;
+	},
 	initLegacy: function () {
 		return cs.init( {
 			getUser: function ( login, success, failure ) {
