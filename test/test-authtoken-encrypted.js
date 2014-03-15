@@ -68,8 +68,6 @@ describe( 'authtoken-encrypted', function () {
 			token = tokenlib.generate( user, "1234", Date.now() + 15 * 60 * 1000 ),
 			successRe = /^success=(.+)$/;
 
-			console.log(token);
-
 		async.waterfall( [
 
 			function ( cb ) {
@@ -77,7 +75,7 @@ describe( 'authtoken-encrypted', function () {
 					.set( authHeader, token )
 					.expect( 200 )
 					.expect( authHeader, successRe )
-					.expect( userHeader, userInfo, cb );
+					.expect( userHeader, tokenlib.cipher(userInfo), cb );
 			},
 			function ( res, cb ) {
 				var match = res.headers[ authHeader ].match( successRe );
@@ -85,7 +83,7 @@ describe( 'authtoken-encrypted', function () {
 					.set( authHeader, match[ 1 ] )
 					.expect( 200 )
 					.expect( authHeader, successRe )
-					.expect( userHeader, userInfo, cb );
+					.expect( userHeader, tokenlib.cipher(userInfo), cb );
 			},
 			function ( res, cb ) {
 				var match = res.headers[ authHeader ].match( successRe );
