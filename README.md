@@ -95,11 +95,14 @@ var cs = require('cansecurity');
 var cansec = cs.init(initConfig);
 ````
 
-The `initConfig` has four properties:
+The `initConfig` has six properties:
 
 * `sessionExpiry`: OPTIONAL. Integer in minutes how long sessions should last, default is `15`. Used both for expressjs sessions and CS sessions. Setting `sessionExpiry` will **only** affect how long a session is valid **for cansecurity**. It will **not** affect the underlying expressjs session itself.
 * `sessionKey`: OPTIONAL. String. Secret key shared between nodejs servers to provide single-sign-on. This is a string. The default, if none is provided, is a random 64-character string. This is **required** if you want to take advantage of cansecurity's stateless sessions. Keep this very secret.
 * `validate`: REQUIRED. Function that will get a user by username, and possibly validate a their password, asynchronously. For more details, see below.
+* `encryptHeader`: OPTIONAL. With a value of true, the exposed headers (`X-CS-Auth` and `X-CS-User`) are encrypted using `rc4-hmac-md5` algorithm.
+* `authHeader`: OPTIONAL. Replaces the Auth header `X-CS-Auth` for the specified header name.
+* `userHeader`: OPTIONAL. Replaces the User header `X-CS-User` for the specified header name.
 
 #### Validation
 Validation is straightforward. Once you have set up cansecurity properly, it functions as standard expressjs middleware:
@@ -511,6 +514,16 @@ A common pattern, as shown in the last example above, is to retrieve an object, 
 
 1. It doesn't know where the object is stored. Sure, most use cases store it in the request object somewhere, or possibly the response object, but cansecurity does not want to impose on your application where that is. Thus, it just delegates to you, saying, "give me a function to retrieve the object, if I pass you the request."
 2. It doesn't know what the object looks like. It may be a POJSO (Plain Old JavaScript Object), like above, or one that supports that style, like Spine Models. But what if it is something more complex, a function, with special parameters? What if it is a Backbone Model, which requires using getters? By asking your application to provide a function, it completely abstracts out the issue, and says, "whatever, as long as you pass me back a POJSO, I am happy."
+
+#### Clearing session data
+The function to clear is exposed once Cansecurity is initialized.
+
+```javascript
+app.get("/logout",function(req, res){
+	cansec.clear(req, res);
+	res.send(200);
+});
+```
 
 ### Declarative Authorization
 Declarative authorization is given to drastically clean up your authorizations. Normal cansecurity authorization lets you inject authorization into every route, like so.
