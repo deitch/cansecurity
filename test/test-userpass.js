@@ -1,8 +1,9 @@
 /*jslint node:true */
 /*global before,it,describe */
 var express = require( 'express' ),
-	app = express(),
-	cansec = require( './resources/cs' ).init(),
+	app,
+	cansec,
+	cs = require( './resources/cs' ),
 	errorHandler = require( './resources/error' ),
 	request = require( 'supertest' ),
 	r,
@@ -10,6 +11,7 @@ var express = require( 'express' ),
 	path = "/public";
 describe( 'userpass', function () {
 	before( function () {
+		cansec = cs.init();
 		app = express();
 		app.use( express.cookieParser() );
 		app.use( express.session( {

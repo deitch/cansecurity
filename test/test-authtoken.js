@@ -1,9 +1,10 @@
 /*jslint node:true */
 /*global before,it,describe */
 var express = require( 'express' ),
-	app = express(),
+	app,
 	async = require( 'async' ),
-	cansec = require( './resources/cs' ).init(),
+	cansec,
+	cs = require( './resources/cs' ),
 	tokenlib = require( '../lib/token' ),
 	request = require( 'supertest' ),
 	r,
@@ -19,6 +20,7 @@ var express = require( 'express' ),
 	path = "/public";
 describe( 'authtoken', function () {
 	before( function () {
+		cansec = cs.init();
 		app = express();
 		app.use( express.cookieParser() );
 		app.use( express.session( {

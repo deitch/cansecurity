@@ -1,7 +1,7 @@
 /*jslint node:true, nomen:true */
 /*global before, it, describe */
-var express = require('express'), app = express(), request = require('supertest'), _ = require('lodash'), 
-cansec = require('./resources/cs').init(), errorHandler = require('./resources/error'), declareFile = __dirname+'/resources/declare.json',
+var express = require('express'), app, request = require('supertest'), _ = require('lodash'), 
+cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'), declareFile = __dirname+'/resources/declare.json',
 r, path, q, unauthenticated = {message:"unauthenticated"}, unauthorized = {message:"unauthorized"},
 send200 = function(req,res,next){
 	// send a 200
@@ -15,6 +15,7 @@ getCheckObject = function(req,res) {
 describe('declarative authorization', function(){
 	describe('without format flag', function(){
 		before(function(){
+			cansec = cs.init();
 			app = express();
 			app.use(express.cookieParser());	
 			app.use(express.session({secret: "agf67dchkQ!"}));
@@ -156,6 +157,7 @@ describe('declarative authorization', function(){
 	});
 	describe('with format flag', function(){
 		before(function(){
+			cansec = cs.init();
 			app = express();
 			app.use(express.cookieParser());	
 			app.use(express.session({secret: "agf67dchkQ!"}));

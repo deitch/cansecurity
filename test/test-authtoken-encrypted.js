@@ -4,7 +4,8 @@ var express = require( 'express' ),
 	app = express(),
 	async = require( 'async' ),
 	tokenlib = require( './resources/cs' ).initTokenLib(true),
-	cansec = require( './resources/cs' ).initEncrypted(),
+	cansec,
+	cs = require( './resources/cs' ),
 	request = require( 'supertest' ),
 	r,
 	authHeader = "X-CS-Auth".toLowerCase(),
@@ -20,6 +21,7 @@ var express = require( 'express' ),
 
 describe( 'authtoken-encrypted', function () {
 	before( function () {
+		cansec = cs.initEncrypted();
 		app = express();
 		app.use( express.cookieParser() );
 		app.use( express.session( {
@@ -86,7 +88,7 @@ describe( 'authtoken-encrypted', function () {
 					.expect( userHeader, tokenlib.cipher(userInfo), cb );
 			},
 			function ( res, cb ) {
-				var match = res.headers[ authHeader ].match( successRe );
+				var match = res.headers[ authHeader ].match( successRe ),
 				decipherToken = /(([^:]*):([^:]*):([^:]*))$/;
 				match = tokenlib.decipher( match[ 1 ] )	.match( decipherToken );
 
