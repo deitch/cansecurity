@@ -215,6 +215,8 @@ Because the auth header is created anew with each request, the expiry window is 
 #### X-CS-User Header
 The X-CS-User response header contains the actual logged in user when authentication by any means was successful. Normally, it is a JSON-encoded string, but it really depends on what your `validate()` function returns in the `user` parameter of the `callback`.
 
+**Note**: You need to be **really** careful with what `validate()` returns. *Everything* in there goes into the `X-CS-User` response header. While it only goes in the header to the authenticated user, it still is sending out everything you send. You might not want the password - even hashed - in the header fields.
+
 #### CORS
 Note for usage in CORS situations. cansecurity automatically adds the following header to every response:
 
