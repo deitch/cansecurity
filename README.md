@@ -103,6 +103,7 @@ The `initConfig` has six properties:
 * `encryptHeader`: OPTIONAL. With a value of true, the exposed headers (`X-CS-Auth` and `X-CS-User`) are encrypted using `rc4-hmac-md5` algorithm.
 * `authHeader`: OPTIONAL. Replaces the Auth header `X-CS-Auth` for the specified header name.
 * `userHeader`: OPTIONAL. Replaces the User header `X-CS-User` for the specified header name.
+* `debug`: OPTIONAL. Print debug messages about each authentication attempt to the console. It will **not** include the actual password.
 
 #### Validation
 Validation is straightforward. Once you have set up cansecurity properly, it functions as standard expressjs middleware:
