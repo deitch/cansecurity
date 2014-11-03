@@ -528,6 +528,16 @@ app.get("/logout",function(req, res){
 });
 ```
 
+#### Deny All
+If you want to deny access to everything - always send a 403 - unless it is *explicitly* approved, just add a "deny all" line at the end of your routes.
+
+````JavaScript
+app.get("/api/employee/:user",cansec.restrictToSelfOrRoles("admin"),sendDataFn);
+app.get("/public/page",send200);
+// lots more 
+app.get("*",function(req,res,next){res.send(403);});
+````
+
 ### Declarative Authorization
 Declarative authorization is given to drastically clean up your authorizations. Normal cansecurity authorization lets you inject authorization into every route, like so.
 
@@ -643,6 +653,21 @@ Here are some examples.
 // when PUT /api/user/:user/roles, run the "roles" loader, then send 403 unless user.roles.admin === true || item.name === 'me'
 ["PUT","/api/user/:user/roles","roles","(user.roles.admin === true) || (item.name === 'me')"]
 ````
+
+#### Deny All
+If you want to deny access to everything - always send a 403 - unless it is *explicitly* approved, just add a "deny all" line at the end of your declarative routes.
+
+````JavaScript
+// when PUT /api/user/:user/roles, send 403 unless user.roles.admin === true
+["PUT","/api/user/:user/roles","user.roles.admin === true"]
+
+// when PUT /api/user/:user/roles, run the "roles" loader, then send 403 unless user.roles.admin === true || item.name === 'me'
+["PUT","/api/user/:user/roles","roles","(user.roles.admin === true) || (item.name === 'me')"]
+
+// deny everything else
+["GET","*","false"]
+````
+
 
 #### Context for the Condition
 The condition string is run inside its own new context. Besides the usual nodejs environment, it has the following variable available to it:
