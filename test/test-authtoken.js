@@ -14,7 +14,7 @@ var express = require( 'express' ),
 		name: "john",
 		pass: "1234",
 		age: 25,
-		id: "1",
+		id: 1,
 		roles: [ "admin" ]
 	} ),
 	path = "/public";
