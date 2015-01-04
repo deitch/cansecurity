@@ -2,19 +2,19 @@
 	"routes": [
 		["GET","/secure/loggedIn","user !== undefined && user !== null"],
 		["GET","/secure/denyAll","false === true"],
-		["GET","/secure/deny","req.param('abc') === 'abc'"],
+		["GET","/secure/deny","req.query.abc === 'abc'"],
 		["GET","/secure/denyError","req.foo.a.b.c.d === 'q'"],
 		
 		["GET","/secure/parameter","true === true"],
 		["GET","/secure/parameter",{"private":"true"},"false === true"],
 		
-		["GET","/secure/chainedParameter","req.param('abc') === 'abc'"],
+		["GET","/secure/chainedParameter","req.query.abc === 'abc'"],
 		["GET","/secure/chainedParameter",{"private":"true"},"false === true"],
 		
-		["GET","/secure/login",true,"req.param('abc') === 'abc'"],
-		["GET","/secure/loginParam",{"private":"true"},true,"req.param('abc') === 'abc'"],
+		["GET","/secure/login",true,"req.query.abc === 'abc'"],
+		["GET","/secure/loginParam",{"private":"true"},true,"req.query.abc === 'abc'"],
 		
-		["GET","/secure/user/:user","req.param('user') === '1'"],
+		["GET","/secure/user/:user","req.params.user === '1'"],
 
 		["GET","/secure/dash","_.contains([1,2,3],1)"],
 		

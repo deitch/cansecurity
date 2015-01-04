@@ -1,29 +1,14 @@
-/*jslint node:true */
-/*global before,it,describe */
-var express = require( 'express' ),
+/*jslint node:true, unused:vars */
+/*global before,it,describe,after */
+var express = require( 'express' ), restify = require('restify'),
 	app,
 	cs = require( './resources/cs' ),
 	errorHandler = require( './resources/error' ),
 	request = require( 'supertest' ),
 	r, cansec, tokenlib = require( '../lib/token' ),
 	authHeader = "X-CS-Auth".toLowerCase(),
-	path = "/public";
-describe( 'legacy handlers', function () {
-	before( function () {
-		cansec = cs.initLegacy();
-		app = express();
-		app.use( express.cookieParser() );
-		app.use( express.session( {
-			secret: "agf67dchkQ!"
-		} ) );
-		app.use( cansec.validate );
-		app.use( app.router );
-		app.use( errorHandler );
-		app.get( path, cansec.restrictToLoggedIn, function ( req, res, next ) {
-			res.send( 200 );
-		} );
-		r = request( app );
-	} );
+	path = "/public",
+alltests = function () {
 	describe( 'validatePassword', function () {
 		it( 'should reject user not logged in', function ( done ) {
 			r.get( path ).expect( 401, done );
@@ -48,5 +33,42 @@ describe( 'legacy handlers', function () {
 				re = /^success=/;
 			r.get( path ).set( authHeader, token ).expect( 200 ).expect( authHeader, re, done );
 		} );
-	} );
+	} );	
+};
+describe( 'legacy handlers', function () {
+	before(function(){
+		cansec = cs.initLegacy();
+	});
+	describe('express', function(){
+		before( function () {
+			app = express();
+			app.use( express.cookieParser() );
+			app.use( express.session( {
+				secret: "agf67dchkQ!"
+			} ) );
+			app.use( cansec.validate );
+			app.use( app.router );
+			app.use( errorHandler );
+			app.get( path, cansec.restrictToLoggedIn, function ( req, res, next ) {
+				res.send( 200 );
+			} );
+			r = request( app );
+		} );
+		alltests();
+	});
+	describe('restify', function(){
+		before( function () {
+			app = restify.createServer();
+			app.use( cansec.validate );
+			app.get( path, cansec.restrictToLoggedIn, function ( req, res, next ) {
+				res.send( 200 );
+			} );
+			r = request( app );
+		});
+		after(function(){
+			app.close();
+		});
+		alltests();		
+	});
+
 } );

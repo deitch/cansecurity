@@ -1,9 +1,11 @@
 # cansecurity
 
 ## Overview
-cansecurity is your **all-in-one** security library for user authentication management and authorization in node (and specifically expressjs) apps.
+cansecurity is your **all-in-one** security library for user authentication management and authorization in node (and specifically expressjs and restify) apps.
 
 You can use use authentication, per-route authorization, and even <u>declarative</u> authorization. You can authenticate against *any* authentication system you like, just provide the interface function.
+
+**As of version 0.7.0, we support both restify and express.**
 
 It's this simple:
     
@@ -781,9 +783,28 @@ If `format` is set to `true`, then cansecurity will *automatically* add `.:forma
 
 
 ## Testing
-To run the tests, from the root directory, run `npm test`.
+To run the tests, from the root directory, run `npm test` or more directly `mocha`.
+
+**Note:** Tests are set up both for express and for restify. However, running them both causes one to trounce the other. Apparently restify grabs hold of the http module and its server munges the requests that express tries to read. One cannot really blame restify; it never intended to run in the same node instance with another server.
+
+To bypass this issue, run tests *twice*:
+
+    mocha -g express
+		mocha -g restify
+
+
 
 ## Breaking Changes
+
+#### Changes to version 0.7.0
+restify is now fully supported and tested for. However, restify 2.8.0 or higher is required.
+
+Additionally, because the tests trounce each other, run each separately when testing:
+
+    mocha -g express
+		mocha -g restify
+		
+
 
 #### Changes to version 0.6.4
 Declarative authorization no longer has an option to "allow" or "deny" by default. **All** rules are "deny" unless the condition passes. It is very easy to invert the condition and make it pass except in certain circumstances.

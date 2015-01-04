@@ -1,6 +1,6 @@
-/*jslint node:true, nomen:true */
-/*global before, it, describe */
-var express = require('express'), app = express(), request = require('supertest'), _ = require('lodash'), 
+/*jslint node:true, nomen:true, unused:vars */
+/*global before, it, describe, after */
+var express = require('express'), restify = require('restify'), app = express(), request = require('supertest'),
 cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'),
 r, path, q, unauthenticated = "unauthenticated", unauthorized = "unauthorized",
 send200 = function(req,res,next){
@@ -9,50 +9,17 @@ send200 = function(req,res,next){
 },
 getCheckObject = function(req,res) {
 	return({owner:"2",recipient:"4"});
-};
-
-
-describe('authorization', function(){
-	before(function(){
-		cansec = cs.init();
-		app = express();
-		app.use(express.cookieParser());	
-		app.use(express.session({secret: "agf67dchkQ!"}));
-		app.use(cansec.validate);
-		app.use(app.router);
-		app.use(errorHandler);
-		
-		app.get('/secure/fieldOrRole',cansec.restrictToFieldOrRoles("owner","admin",getCheckObject),send200);
-		app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
-		app.get("/secure/user/:user",cansec.restrictToSelf,send200);
-		app.get("/secure/roles/admin",cansec.restrictToRoles("admin"),send200);
-		app.get("/secure/roles/adminOrSuper",cansec.restrictToRoles(["admin","super"]),send200);
-		app.get("/secure/selfOrRoles/:user/admin",cansec.restrictToSelfOrRoles("admin"),send200);
-		app.get("/secure/selfOrRoles/:user/adminOrSuper",cansec.restrictToSelfOrRoles(["admin","super"]),send200);
-		app.get("/secure/param",cansec.restrictToParam("searchParam"),send200);
-		app.get("/secure/paramOrRole",cansec.restrictToParamOrRoles("searchParam","admin"),send200);
-		app.get("/secure/paramOrMultipleRoles",cansec.restrictToParamOrRoles("searchParam",["admin","super"]),send200);
-		app.get("/secure/field",cansec.restrictToField("owner",getCheckObject),send200);
-		app.get("/secure/fields",cansec.restrictToField(["owner","recipient"],getCheckObject),send200);
-		app.get("/secure/fieldOrRole",cansec.restrictToFieldOrRoles("owner","admin",getCheckObject),send200);
-		app.get("/secure/fieldOrRoles",cansec.restrictToFieldOrRoles("owner",["admin","super"],getCheckObject),send200);
-		app.get("/secure/fieldsOrRole",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin",getCheckObject),send200);
-		app.get("/secure/fieldsOrRoles",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"],getCheckObject),send200);
-		// conditionals
-		app.get("/secure/conditionalDirect",cansec.ifParam("private","true").restrictToLoggedIn,send200);
-		app.get("/secure/conditionalIndirect",cansec.ifParam("private","true").restrictToRoles(["admin","super"]),send200);
-		
-		r = request(app);
-	});
+},
+alltests = function () {
   describe('logged in path', function(){
 		before(function(){
 		  path = '/secure/loggedin';
 		});
 		it('should reject when not logged in',function (done) {
-			r.get(path).expect(401,unauthenticated,done);
+			r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 		});
 		it('should accept when logged in', function(done){
-			r.get(path).auth('john','1234').expect(200,done);
+			r.get(path).set('Accept', 'text/plain').auth('john','1234').expect(200,done);
 		});
   });
 	describe('self path', function(){
@@ -60,10 +27,10 @@ describe('authorization', function(){
 		  path = '/secure/user/1';
 		});
 	  it('should reject when not logged in', function(done){
-	    r.get(path).expect(401,unauthenticated,done);
+	    r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 	  });
 		it('should reject incorrect user', function(done){
-		  r.get(path).auth("jill","1234").expect(403,unauthorized,done);
+		  r.get(path).auth("jill","1234").set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept correct user', function(done){
 		  r.get(path).auth('john','1234').expect(200,done);
@@ -75,13 +42,13 @@ describe('authorization', function(){
 			  path = '/secure/roles/admin';
 			});
 			it('should reject not logged in', function(done){
-			  r.get(path).expect(401,unauthenticated,done);
+			  r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 			});
 			it('should reject user with no roles', function(done){
-			  r.get(path).auth('norole','1234').expect(403,unauthorized,done);
+			  r.get(path).auth('norole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 			});
 			it('should reject user with incorrect role', function(done){
-			  r.get(path).auth('userrole','1234').expect(403,unauthorized,done);
+			  r.get(path).auth('userrole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 			});
 			it('should accept user with correct role', function(done){
 			  r.get(path).auth('john','1234').expect(200,done);
@@ -92,13 +59,13 @@ describe('authorization', function(){
 			  path = '/secure/roles/adminOrSuper';
 			});
 		  it('should reject user with no roles', function(done){
-		    r.get(path).auth('norole','1234').expect(403,unauthorized,done);
+		    r.get(path).auth('norole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		  });
 		  it('should reject user with no roles', function(done){
-		    r.get(path).auth('norole','1234').expect(403,unauthorized,done);
+		    r.get(path).auth('norole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		  });
 		  it('should reject user with wrong roles', function(done){
-		    r.get(path).auth('userrole','1234').expect(403,unauthorized,done);
+		    r.get(path).auth('userrole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		  });
 		  it('should accept user with correct roles', function(done){
 		    r.get(path).auth('john','1234').expect(200,done);
@@ -125,7 +92,7 @@ describe('authorization', function(){
 		    path = "/secure/selfOrRoles/2/adminOrSuper";
 		  });
 			it('should reject user with wrong roles', function(done){
-			  r.get(path).auth('userrole','1234').expect(403,unauthorized,done);
+			  r.get(path).auth('userrole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 			});
 			it('should accept user with super role', function(done){
 			  r.get(path).auth('jill','1234').expect(200,done);
@@ -141,10 +108,10 @@ describe('authorization', function(){
 			q = {searchParam:"2"};
 		});
 		it('should reject user not logged in', function(done){
-		  r.get(path).query(q).expect(401,unauthenticated,done);
+		  r.get(path).query(q).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 		});
 		it('should reject wrong user', function(done){
-		  r.get(path).query(q).auth("userrole","1234").expect(403,unauthorized,done);
+		  r.get(path).query(q).auth("userrole","1234").set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept correct user', function(done){
 		  r.get(path).query(q).auth("jill","1234").expect(200,done);
@@ -157,10 +124,10 @@ describe('authorization', function(){
 				q = {searchParam:2};
 	    });
 			it('should reject not logged in', function(done){
-			  r.get(path).query(q).expect(401,unauthenticated,done);
+			  r.get(path).query(q).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 			});
 			it('should reject wrong user', function(done){
-			  r.get(path).query(q).auth("userrole","1234").expect(403,unauthorized,done);
+			  r.get(path).query(q).auth("userrole","1234").set('Accept', 'text/plain').expect(403,unauthorized,done);
 			});
 			it('should accept user who passes "self"', function(done){
 			  r.get(path).query(q).auth("jill","1234").expect(200,done);
@@ -175,10 +142,10 @@ describe('authorization', function(){
 				q = {searchParam:2};
 	    });
 			it('should reject not logged in', function(done){
-			  r.get(path).query(q).expect(401,unauthenticated,done);
+			  r.get(path).query(q).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 			});
 			it('should reject wrong user', function(done){
-			  r.get(path).query(q).auth("userrole","1234").expect(403,unauthorized,done);
+			  r.get(path).query(q).auth("userrole","1234").set('Accept', 'text/plain').expect(403,unauthorized,done);
 			});
 			it('should accept user who passes "self"', function(done){
 			  r.get(path).query(q).auth("jill","1234").expect(200,done);
@@ -193,16 +160,16 @@ describe('authorization', function(){
 	    path = '/secure/field';
 	  });
 		it('should reject not logged in', function(done){
-		  r.get(path).expect(401,unauthenticated,done);
+		  r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 		});
 		it('should reject wrong user', function(done){
-		  r.get(path).auth('userrole','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('userrole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept correct user', function(done){
 		  r.get(path).auth('jill','1234').expect(200,done);
 		});
 		it('should reject wrong user with admin rights', function(done){
-		  r.get(path).auth('john','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('john','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 	});
 	describe('fields', function(){
@@ -210,10 +177,10 @@ describe('authorization', function(){
 	    path = '/secure/fields';
 	  });
 		it('should reject not logged in', function(done){
-		  r.get(path).expect(401,unauthenticated,done);
+		  r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 		});
 		it('should reject wrong user', function(done){
-		  r.get(path).auth('norole','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('norole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept correct user as owner', function(done){
 		  r.get(path).auth('jill','1234').expect(200,done);
@@ -222,7 +189,7 @@ describe('authorization', function(){
 		  r.get(path).auth('userrole','1234').expect(200,done);
 		});
 		it('should reject wrong user even if admin', function(done){
-		  r.get(path).auth('john','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('john','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 	});
 	describe('fieldOrRole', function(){
@@ -230,16 +197,16 @@ describe('authorization', function(){
 	    path = '/secure/fieldOrRole';
 	  });
 		it('should reject not logged in', function(done){
-		  r.get(path).expect(401,unauthenticated,done);
+		  r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 		});
 		it('should reject wrong user', function(done){
-		  r.get(path).auth('norole','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('norole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept owner user', function(done){
 		  r.get(path).auth('jill','1234').expect(200,done);
 		});
 		it('should reject recipient', function(done){
-		  r.get(path).auth('userrole','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('userrole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept admin', function(done){
 		  r.get(path).auth('john','1234').expect(200,done);
@@ -250,16 +217,16 @@ describe('authorization', function(){
 	    path = '/secure/fieldOrRoles';
 	  });
 		it('should reject not logged in', function(done){
-		  r.get(path).expect(401,unauthenticated,done);
+		  r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 		});
 		it('should reject wrong user', function(done){
-		  r.get(path).auth('norole','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('norole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept owner', function(done){
 		  r.get(path).auth('jill','1234').expect(200,done);
 		});
 		it('should reject recipient', function(done){
-		  r.get(path).auth('userrole','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('userrole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept admin rights user', function(done){
 		  r.get(path).auth('john','1234').expect(200,done);
@@ -270,10 +237,10 @@ describe('authorization', function(){
 	    path = "/secure/fieldsOrRole";
 	  });
 		it('should reject not logged in', function(done){
-		  r.get(path).expect(401,unauthenticated,done);
+		  r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 		});
 		it('should reject wrong user', function(done){
-		  r.get(path).auth('norole','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('norole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept owner', function(done){
 		  r.get(path).auth('jill','1234').expect(200,done);
@@ -290,10 +257,10 @@ describe('authorization', function(){
 	    path = "/secure/fieldsOrRoles";
 	  });
 		it('should reject not logged in', function(done){
-		  r.get(path).expect(401,unauthenticated,done);
+		  r.get(path).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 		});
 		it('should reject wrong user', function(done){
-		  r.get(path).auth('norole','1234').expect(403,unauthorized,done);
+		  r.get(path).auth('norole','1234').set('Accept', 'text/plain').expect(403,unauthorized,done);
 		});
 		it('should accept owner', function(done){
 		  r.get(path).auth('jill','1234').expect(200,done);
@@ -315,7 +282,7 @@ describe('authorization', function(){
 			  r.get(path).expect(200,done);
 			});
 			it('should reject with parameter but not logged in', function(done){
-			  r.get(path).query(q).expect(401,unauthenticated,done);
+			  r.get(path).query(q).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 			});
 			it('should accept wuth parameter and logged in', function(done){
 			  r.get(path).query(q).auth('john','1234').expect(200,done);
@@ -324,17 +291,71 @@ describe('authorization', function(){
 		describe('indirect', function(){
 		  before(function(){
 		    path = '/secure/conditionalIndirect';
+				q = {private:true};
 		  });
 			it('should accept with no parameter', function(done){
 			  r.get(path).expect(200,done);
 			});
 			it('should reject with parameter but not logged in', function(done){
-			  r.get(path).query(q).expect(401,unauthenticated,done);
+			  r.get(path).query(q).set('Accept', 'text/plain').expect(401,unauthenticated,done);
 			});
 			it('should accept with parameter and logged in', function(done){
 			  r.get(path).query(q).auth('john','1234').expect(200,done);
 			});
 		});
+	});
+},
+setpaths = function () {
+	app.get('/secure/fieldOrRole',cansec.restrictToFieldOrRoles("owner","admin",getCheckObject),send200);
+	app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
+	app.get("/secure/user/:user",cansec.restrictToSelf,send200);
+	app.get("/secure/roles/admin",cansec.restrictToRoles("admin"),send200);
+	app.get("/secure/roles/adminOrSuper",cansec.restrictToRoles(["admin","super"]),send200);
+	app.get("/secure/selfOrRoles/:user/admin",cansec.restrictToSelfOrRoles("admin"),send200);
+	app.get("/secure/selfOrRoles/:user/adminOrSuper",cansec.restrictToSelfOrRoles(["admin","super"]),send200);
+	app.get("/secure/param",cansec.restrictToParam("searchParam"),send200);
+	app.get("/secure/paramOrRole",cansec.restrictToParamOrRoles("searchParam","admin"),send200);
+	app.get("/secure/paramOrMultipleRoles",cansec.restrictToParamOrRoles("searchParam",["admin","super"]),send200);
+	app.get("/secure/field",cansec.restrictToField("owner",getCheckObject),send200);
+	app.get("/secure/fields",cansec.restrictToField(["owner","recipient"],getCheckObject),send200);
+	app.get("/secure/fieldOrRole",cansec.restrictToFieldOrRoles("owner","admin",getCheckObject),send200);
+	app.get("/secure/fieldOrRoles",cansec.restrictToFieldOrRoles("owner",["admin","super"],getCheckObject),send200);
+	app.get("/secure/fieldsOrRole",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin",getCheckObject),send200);
+	app.get("/secure/fieldsOrRoles",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"],getCheckObject),send200);
+	// conditionals
+	app.get("/secure/conditionalDirect",cansec.ifParam("private","true").restrictToLoggedIn,send200);
+	app.get("/secure/conditionalIndirect",cansec.ifParam("private","true").restrictToRoles(["admin","super"]),send200);
+};
+
+
+describe('authorization', function(){
+	describe('express', function(){
+		before(function(){
+			cansec = cs.init();
+			app = express();
+			app.use(express.cookieParser());	
+			app.use(express.session({secret: "agf67dchkQ!"}));
+			app.use(cansec.validate);
+			app.use(app.router);
+			app.use(errorHandler);
+			setpaths();
+			r = request(app);
+		});
+		alltests();
+	});
+	describe('restify', function(){
+		before(function(){
+			cansec = cs.init();
+			app = restify.createServer();
+			app.use(restify.queryParser());
+			app.use(cansec.validate);
+			setpaths();
+			r = request(app);
+		});
+		after(function(){
+			app.close();
+		});
+		alltests();
 	});
 });
 
