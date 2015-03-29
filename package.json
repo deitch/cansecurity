@@ -19,7 +19,7 @@
 	},
 	"devDependencies": {
 		"express":"3.x",
-		"restify":"2.x",
+		"restify":"3.x",
 		"mocha":"1.x",
 		"supertest":"0.x"	
 	},
