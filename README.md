@@ -752,29 +752,30 @@ You can define the loader functions in a file local to a certain declarative fil
 
 ````JavaScript
 // in your main server.js
-app.use(cansec.authorizer(__dirname+'/path/to/decl.json',{loader:__dirname+'/path/to/loader.js'}))`
+app.use(cansec.authorizer(__dirname+'/path/to/decl.json',{loader: {
+	fn1: function(req,res,next){},
+	fn2: function(req,res,next){} 
+}}))`
 ````
 
-The loader file then would look like:
+Of course, you can always separate the loader functions into another file, like with the init file, and `require` it yourself:
 
 ````JavaScript
-module.exports = {
-	user: function(req,res,next) {
-	},
-	group: function(req,res,next) {
-	}
-}
+// in your main server.js
+app.use(cansec.authorizer(__dirname+'/path/to/decl.json',{loader: require(pathToLoader)}))`
 ````
+
 
 If you can do it globally, why bother with the local? Simple. You can have *multiple* declarative files. For example, we often separate the security authorization (user Jim is allowed to see his own account) from subscription authorization (user Jim already has 2 accounts and needs to upgrade his plan to get another).
 
 ````JavaScript
 // in your main server.js
-app.use(cansec.authorizer(__dirname+'/path/to/security.json',{loader:__dirname+'/securityloader.js'}))`
-app.use(cansec.authorizer(__dirname+'/path/to/plans.json',{loader:__dirname+'/planloader.js'}))`
+app.use(cansec.authorizer(__dirname+'/path/to/security.json',{loader:securityConfig}))`
+app.use(cansec.authorizer(__dirname+'/path/to/plans.json',{loader:plansConfig}))`
 ````
 
 If course, you might want to keep them together, in which case just use the global!
+
 
 ##### Order of Priority
 

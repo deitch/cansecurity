@@ -206,7 +206,7 @@ describe('declarative authorization', function(){
 				app.use(cansec.validate);
 				// This is where we instantiate the declarative authorizer
 				app.use(cansec.authorizer(declareFile));
-				app.use(cansec.authorizer(declareLocalFile,{loader:declareLocalLoader}));
+				app.use(cansec.authorizer(declareLocalFile,{loader:require(declareLocalLoader)}));
 				app.use(app.router);
 				app.use(errorHandler);
 		
