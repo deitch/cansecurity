@@ -1,7 +1,10 @@
 /*jslint node:true, nomen:true, unused:vars */
 /*global before, it, describe, after */
 var express = require('express'), restify = require('restify'), app, request = require('supertest'),
-cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'), declareFile = __dirname+'/resources/declare.json',
+cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'), 
+declareFile = __dirname+'/resources/declare.json',
+declareLocalFile = __dirname+'/resources/declare2.json',
+declareLocalLoader = __dirname+'/resources/loader.js',
 r, path, send200 = function(req,res,next){
 	// send a 200
 	res.send(200);
@@ -141,12 +144,22 @@ secondtests = function () {
   it('should deny denyAll if sent with format', function(done){
 	  r.get("/secure/denyAll.json").expect(403,done);
   });
+},
+thirdtests = function () {
+	describe('loader', function(){
+	  it('should return 200 for global loader', function(done){
+		  r.get('/secure2/globalloader').expect(200,done);
+	  });
+		it('should execute the specific group loader instead of the global one', function(done){
+		  r.get('/secure2/localloader').expect(200,done);
+		});
+	});
 };
 
 
 describe('declarative authorization', function(){
-	describe('without format flag', function(){
-		describe('express', function(){
+	describe('express', function(){
+		describe('without format flag', function(){
 			before(function(){
 				cansec = cs.init();
 				app = express();
@@ -165,7 +178,51 @@ describe('declarative authorization', function(){
 			});
 			firsttests();
 		});
-		describe('restify', function(){
+		describe('with format flag', function(){
+			before(function(){
+				cansec = cs.init();
+				app = express();
+				app.use(express.cookieParser());	
+				app.use(express.session({secret: "agf67dchkQ!"}));
+				app.use(cansec.validate);
+				// This is where we instantiate the declarative authorizer
+				app.use(cansec.authorizer(declareFile,{format:true}));
+				app.use(app.router);
+				app.use(errorHandler);
+		
+				// we just send 200 for all routes, if it passes authorization
+				app.all('*',send200);
+		
+				r = request(app);
+			});
+			secondtests();
+		});
+		describe('multiple declarations', function(){
+			before(function(){
+				cansec = cs.init();
+				app = express();
+				app.use(express.cookieParser());	
+				app.use(express.session({secret: "agf67dchkQ!"}));
+				app.use(cansec.validate);
+				// This is where we instantiate the declarative authorizer
+				app.use(cansec.authorizer(declareFile));
+				app.use(cansec.authorizer(declareLocalFile,{loader:declareLocalLoader}));
+				app.use(app.router);
+				app.use(errorHandler);
+		
+				// we just send 200 for all routes, if it passes authorization
+				app.all('*',send200);
+		
+				r = request(app);
+			});
+			// all of the firsttests should still pass
+			firsttests();
+			// all of the thirdtests should pass
+			thirdtests();
+		});
+	});
+	describe('restify', function(){
+		describe('without format flag', function(){
 			before(function(){
 				cansec = cs.init();
 				app = restify.createServer();
@@ -187,28 +244,7 @@ describe('declarative authorization', function(){
 				app.close();
 			});
 		});
-	});
-	describe('with format flag', function(){
-		describe('express', function(){
-			before(function(){
-				cansec = cs.init();
-				app = express();
-				app.use(express.cookieParser());	
-				app.use(express.session({secret: "agf67dchkQ!"}));
-				app.use(cansec.validate);
-				// This is where we instantiate the declarative authorizer
-				app.use(cansec.authorizer(declareFile,{format:true}));
-				app.use(app.router);
-				app.use(errorHandler);
-		
-				// we just send 200 for all routes, if it passes authorization
-				app.all('*',send200);
-		
-				r = request(app);
-			});
-			secondtests();
-		});
-		describe('restify', function(){
+		describe('with format flag', function(){
 			before(function(){
 				cansec = cs.init();
 				app = restify.createServer();
@@ -227,6 +263,8 @@ describe('declarative authorization', function(){
 				r = request(app);
 			});
 			secondtests();
+		});
+		describe('multiple declarations', function(){
 		});
 	});
 });

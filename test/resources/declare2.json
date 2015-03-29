@@ -1,0 +1,6 @@
+{
+	"routes": [
+		["GET","/secure2/localloader","local","item === 'local'"],
+		["GET","/secure2/globalloader","group","item === 1"]
+	]	
+}

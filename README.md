@@ -683,18 +683,6 @@ The condition string is run inside its own new context. Besides the usual nodejs
 #### Loading Data
 You have the option, but not the requirement, to load data before passing your route through the declarative authorizer. 
 
-The data is loaded by passing a loader to `cansec.init()`:
-
-````JavaScript
-cansec.init({
-	loader:  {
-		user: function(req,res,next) {
-		},
-		group: function(req,res,next) {
-		}
-	}
-});
-````
 
 Each loader function has two simple jobs to do:
 
@@ -732,6 +720,70 @@ And the declarative:
 
 
 **Note:** Any route where login is required, login will be validated *before* running the loader.
+
+So where do you actually define the loader functions? You have two options for where the loader can exist.
+
+##### Global
+If you have or want a single loader, you can pass all of your loader functions into `cansec.init()`:
+
+````JavaScript
+cansec.init({
+	loader:  {
+		user: function(req,res,next) {
+		},
+		group: function(req,res,next) {
+		}
+	}
+});
+````
+
+And the declarative part:
+
+````JavaScript
+{
+	routes: [
+		["GET","/api/group/:group",true,"group","_.contains(item.members,user.id)"]
+	]
+}
+````
+
+##### Local
+You can define the loader functions in a file local to a certain declarative file:
+
+````JavaScript
+// in your main server.js
+app.use(cansec.authorizer(__dirname+'/path/to/decl.json',{loader:__dirname+'/path/to/loader.js'}))`
+````
+
+The loader file then would look like:
+
+````JavaScript
+module.exports = {
+	user: function(req,res,next) {
+	},
+	group: function(req,res,next) {
+	}
+}
+````
+
+If you can do it globally, why bother with the local? Simple. You can have *multiple* declarative files. For example, we often separate the security authorization (user Jim is allowed to see his own account) from subscription authorization (user Jim already has 2 accounts and needs to upgrade his plan to get another).
+
+````JavaScript
+// in your main server.js
+app.use(cansec.authorizer(__dirname+'/path/to/security.json',{loader:__dirname+'/securityloader.js'}))`
+app.use(cansec.authorizer(__dirname+'/path/to/plans.json',{loader:__dirname+'/planloader.js'}))`
+````
+
+If course, you might want to keep them together, in which case just use the global!
+
+##### Order of Priority
+
+What if a particular loader is defined in *both* lcala *and* global? The order of priority then is:
+
+1. Look for and run the loader in the local; if not found...
+2. Look for an run the loader in the global.
+
+Simple, right?
 
 
 

@@ -1,4 +1,4 @@
-/*jslint node:true, nomen:true */
+/*jslint node:true, nomen:true, unused:vars */
 var _ = require( 'lodash' ),
 	tokenLib = require("../../lib/token"),
 	cs = require( '../../lib/index' ),
@@ -56,6 +56,10 @@ module.exports = {
 			loader: {
 				group: function ( req, res, next ) {
 					req.cansecurity.item = 1;
+					next();
+				},
+				local: function ( req, res, next ) {
+					req.cansecurity.item = "global";
 					next();
 				}
 			},
