@@ -10,6 +10,9 @@ firsttests = function () {
   it('should allow no path match', function(done){
     r.get("/foo").expect(200,done);
   });
+	it('should allow non-declared method', function(done){
+		r.post("/foo").type('json').send({a:1}).expect(200,done);
+	});
 	describe('user in condition', function(){
 	  it('should deny if user is not logged in', function(done){
 	    r.get('/secure/loggedIn').expect(403,done);
