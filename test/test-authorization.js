@@ -3,9 +3,10 @@
 var express = require('express'), restify = require('restify'), app = express(), request = require('supertest'),
 cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'),
 r, path, q, unauthenticated = "unauthenticated", unauthorized = "unauthorized",
+cookieParser = require('cookie-parser'), session = require('express-session'),
 send200 = function(req,res,next){
 	// send a 200
-	res.send(200);
+	require('../lib/sender')(res,200);
 },
 getCheckObject = function(req,res) {
 	return({owner:"2",recipient:"4"});
@@ -333,10 +334,9 @@ describe('authorization', function(){
 		before(function(){
 			cansec = cs.init();
 			app = express();
-			app.use(express.cookieParser());	
-			app.use(express.session({secret: "agf67dchkQ!"}));
+			app.use(cookieParser());	
+			app.use(session({secret: "agf67dchkQ!",resave:false,saveUninitialized:false}));
 			app.use(cansec.validate);
-			app.use(app.router);
 			app.use(errorHandler);
 			setpaths();
 			r = request(app);

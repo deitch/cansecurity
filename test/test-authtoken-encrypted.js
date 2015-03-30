@@ -5,6 +5,8 @@ var express = require( 'express' ), restify = require('restify'),
 	async = require( 'async' ),
 	tokenlib = require( './resources/cs' ).initTokenLib(true),
 	cansec,
+	cookieParser = require('cookie-parser'),
+	session = require('express-session'),
 	cs = require( './resources/cs' ),
 	request = require( 'supertest' ),
 	r,
@@ -92,14 +94,14 @@ describe( 'authtoken-encrypted', function () {
 		before( function () {
 			cansec = cs.initEncrypted();
 			app = express();
-			app.use( express.cookieParser() );
-			app.use( express.session( {
-				secret: "agf67dchkQ!"
+			app.use( cookieParser() );
+			app.use( session( {
+				secret: "agf67dchkQ!",resave:false,saveUninitialized:false
 			} ) );
 			app.use( cansec.validate );
-			app.use( app.router );
 			app.get( path, function ( req, res, next ) {
-				res.send( 200 );
+				// send a 200
+				require('../lib/sender')(res,200);
 			} );
 			r = request( app );
 		} );
@@ -111,7 +113,8 @@ describe( 'authtoken-encrypted', function () {
 			app = restify.createServer();
 			app.use( cansec.validate );
 			app.get( path, function ( req, res, next ) {
-				res.send( 200 );
+				// send a 200
+				require('../lib/sender')(res,200);
 			} );
 			r = request( app );
 		} );

@@ -4,6 +4,8 @@ var express = require( 'express' ), restify = require('restify'),
 	app,
 	cs = require( './resources/cs' ),
 	errorHandler = require( './resources/error' ),
+	cookieParser = require('cookie-parser'),
+	session = require('express-session'),
 	request = require( 'supertest' ),
 	r, cansec, tokenlib = require( '../lib/token' ),
 	authHeader = "X-CS-Auth".toLowerCase(),
@@ -42,15 +44,15 @@ describe( 'legacy handlers', function () {
 	describe('express', function(){
 		before( function () {
 			app = express();
-			app.use( express.cookieParser() );
-			app.use( express.session( {
-				secret: "agf67dchkQ!"
+			app.use( cookieParser() );
+			app.use( session( {
+				secret: "agf67dchkQ!",resave:false,saveUninitialized:false
 			} ) );
 			app.use( cansec.validate );
-			app.use( app.router );
 			app.use( errorHandler );
 			app.get( path, cansec.restrictToLoggedIn, function ( req, res, next ) {
-				res.send( 200 );
+				// send a 200
+				require('../lib/sender')(res,200);
 			} );
 			r = request( app );
 		} );
@@ -61,7 +63,8 @@ describe( 'legacy handlers', function () {
 			app = restify.createServer();
 			app.use( cansec.validate );
 			app.get( path, cansec.restrictToLoggedIn, function ( req, res, next ) {
-				res.send( 200 );
+				// send a 200
+				require('../lib/sender')(res,200);
 			} );
 			r = request( app );
 		});

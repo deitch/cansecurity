@@ -5,6 +5,8 @@ var express = require( 'express' ),
 	app,
 	cansec,
 	cs = require( './resources/cs' ),
+	cookieParser = require('cookie-parser'),
+	session = require('express-session'),
 	errorHandler = require( './resources/error' ),
 	request = require( 'supertest' ),
 	r,
@@ -36,15 +38,15 @@ describe( 'userpass', function () {
 	describe('express', function(){
 		before( function () {
 			app = express();
-			app.use( express.cookieParser() );
-			app.use( express.session( {
-				secret: "agf67dchkQ!"
+			app.use( cookieParser() );
+			app.use( session( {
+				secret: "agf67dchkQ!",resave:false,saveUninitialized:false
 			} ) );
 			app.use( cansec.validate );
-			app.use( app.router );
 			app.use( errorHandler );
 			app.get( '/public', function ( req, res, next ) {
-				res.send( 200 );
+				// send a 200
+				require('../lib/sender')(res,200);
 			} );
 			r = request( app );
 		} );
@@ -55,7 +57,8 @@ describe( 'userpass', function () {
 			app = restify.createServer();
 			app.use( cansec.validate );
 			app.get( '/public', function ( req, res, next ) {
-				res.send( 200 );
+				// send a 200
+				require('../lib/sender')(res,200);
 			} );
 			r = request( app );
 		});

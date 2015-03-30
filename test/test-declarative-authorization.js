@@ -2,12 +2,14 @@
 /*global before, it, describe, after */
 var express = require('express'), restify = require('restify'), app, request = require('supertest'),
 cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'), 
+cookieParser = require('cookie-parser'),
+session = require('express-session'),
 declareFile = __dirname+'/resources/declare.json',
 declareLocalFile = __dirname+'/resources/declare2.json',
 declareLocalLoader = __dirname+'/resources/loader.js',
 r, path, send200 = function(req,res,next){
 	// send a 200
-	res.send(200);
+	require('../lib/sender')(res,200);
 },
 firsttests = function () {
   it('should allow no path match', function(done){
@@ -163,12 +165,11 @@ describe('declarative authorization', function(){
 			before(function(){
 				cansec = cs.init();
 				app = express();
-				app.use(express.cookieParser());	
-				app.use(express.session({secret: "agf67dchkQ!"}));
+				app.use(cookieParser());	
+				app.use(session({secret: "agf67dchkQ!",resave:false,saveUninitialized:false}));
 				app.use(cansec.validate);
 				// This is where we instantiate the declarative authorizer
 				app.use(cansec.authorizer(declareFile));
-				app.use(app.router);
 				app.use(errorHandler);
 		
 				// we just send 200 for all routes, if it passes authorization
@@ -182,12 +183,11 @@ describe('declarative authorization', function(){
 			before(function(){
 				cansec = cs.init();
 				app = express();
-				app.use(express.cookieParser());	
-				app.use(express.session({secret: "agf67dchkQ!"}));
+				app.use(cookieParser());	
+				app.use(session({secret: "agf67dchkQ!",resave:false,saveUninitialized:false}));
 				app.use(cansec.validate);
 				// This is where we instantiate the declarative authorizer
 				app.use(cansec.authorizer(declareFile,{format:true}));
-				app.use(app.router);
 				app.use(errorHandler);
 		
 				// we just send 200 for all routes, if it passes authorization
@@ -201,13 +201,12 @@ describe('declarative authorization', function(){
 			before(function(){
 				cansec = cs.init();
 				app = express();
-				app.use(express.cookieParser());	
-				app.use(express.session({secret: "agf67dchkQ!"}));
+				app.use(cookieParser());	
+				app.use(session({secret: "agf67dchkQ!",resave:false,saveUninitialized:false}));
 				app.use(cansec.validate);
 				// This is where we instantiate the declarative authorizer
 				app.use(cansec.authorizer(declareFile));
 				app.use(cansec.authorizer(declareLocalFile,{loader:require(declareLocalLoader)}));
-				app.use(app.router);
 				app.use(errorHandler);
 		
 				// we just send 200 for all routes, if it passes authorization
