@@ -849,6 +849,12 @@ To bypass this issue, run tests *twice*:
 
 ## Breaking Changes
 
+#### Changes to version 1.0.0
+Express 4 support!
+
+* All cansecurity versions < 1.0.0 support **only** express < 4.0.0
+* All cansecurity versions >= 1.0.0 support **only** express >= 4.0.0
+
 #### Changes to version 0.7.0
 restify is now fully supported and tested for. However, restify 2.8.0 or higher is required.
 
