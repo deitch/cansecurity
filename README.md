@@ -9,64 +9,66 @@ You can use use authentication, per-route authorization, and even <u>declarative
 
 It's this simple:
     
-    var express = require('express'), app = express(), cs = require('cansecurity'), cansec = cs.init(/* init params */);
-		app.use(cansec.validate);
-		app.user(app.router);
+```Javascript
+var express = require('express'), app = express(), cs = require('cansecurity'), cansec = cs.init(/* init params */);
+	app.use(cansec.validate);
+	app.user(app.router);
 		
-		// send200 is a shortcut route to send a 200 response
+	// send200 is a shortcut route to send a 200 response
 		
-		// open route
-		app.get("/public",send200);
+	// open route
+	app.get("/public",send200);
 		
-		// only authorized if logged in, or as certain roles, or some combination
-		app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
-		app.get("/secure/user/:user",cansec.restrictToSelf,send200);
-		app.get("/secure/roles/admin",cansec.restrictToRoles("admin"),send200);
-		app.get("/secure/roles/adminOrSuper",cansec.restrictToRoles(["admin","super"]),send200);
-		app.get("/secure/selfOrRoles/:user/admin",cansec.restrictToSelfOrRoles("admin"),send200);
-		app.get("/secure/selfOrRoles/:user/adminOrSuper",cansec.restrictToSelfOrRoles(["admin","super"]),send200);
+	// only authorized if logged in, or as certain roles, or some combination
+	app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
+	app.get("/secure/user/:user",cansec.restrictToSelf,send200);
+	app.get("/secure/roles/admin",cansec.restrictToRoles("admin"),send200);
+	app.get("/secure/roles/adminOrSuper",cansec.restrictToRoles(["admin","super"]),send200);
+	app.get("/secure/selfOrRoles/:user/admin",cansec.restrictToSelfOrRoles("admin"),send200);
+	app.get("/secure/selfOrRoles/:user/adminOrSuper",cansec.restrictToSelfOrRoles(["admin","super"]),send200);
 		
-		// only authorized if "searchParam" is set to the same value as the user ID field set in cs.init();
-		app.get("/secure/param",cansec.restrictToParam("searchParam"),send200);
-		app.get("/secure/paramOrRole",cansec.restrictToParamOrRoles("searchParam","admin"),send200);
-		app.get("/secure/paramOrMultipleRoles",cansec.restrictToParamOrRoles("searchParam",["admin","super"]),send200);
+	// only authorized if "searchParam" is set to the same value as the user ID field set in cs.init();
+	app.get("/secure/param",cansec.restrictToParam("searchParam"),send200);
+	app.get("/secure/paramOrRole",cansec.restrictToParamOrRoles("searchParam","admin"),send200);
+	app.get("/secure/paramOrMultipleRoles",cansec.restrictToParamOrRoles("searchParam",["admin","super"]),send200);
 		
-		// only authorized if getCheckObject() returns an object, with field owner, that has a value matching the user ID field
-		app.get("/secure/field",cansec.restrictToField("owner",getCheckObject),send200);
-		app.get("/secure/fields",cansec.restrictToField(["owner","recipient"],getCheckObject),send200);
-		app.get("/secure/fieldOrRole",cansec.restrictToFieldOrRoles("owner","admin",getCheckObject),send200);
-		app.get("/secure/fieldOrRoles",cansec.restrictToFieldOrRoles("owner",["admin","super"],getCheckObject),send200);
-		app.get("/secure/fieldsOrRole",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin",getCheckObject),send200);
-		app.get("/secure/fieldsOrRoles",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"],getCheckObject),send200);
+	// only authorized if getCheckObject() returns an object, with field owner, that has a value matching the user ID field
+	app.get("/secure/field",cansec.restrictToField("owner",getCheckObject),send200);
+	app.get("/secure/fields",cansec.restrictToField(["owner","recipient"],getCheckObject),send200);
+	app.get("/secure/fieldOrRole",cansec.restrictToFieldOrRoles("owner","admin",getCheckObject),send200);
+	app.get("/secure/fieldOrRoles",cansec.restrictToFieldOrRoles("owner",["admin","super"],getCheckObject),send200);
+	app.get("/secure/fieldsOrRole",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin",getCheckObject),send200);
+	app.get("/secure/fieldsOrRoles",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"],getCheckObject),send200);
 		
-		// only authorized if the request parameter "private" has the value "true", and then restrict to logged in
-		app.get("/secure/conditionalDirect",cansec.ifParam("private","true").restrictToLoggedIn,send200);
-		app.get("/secure/conditionalIndirect",cansec.ifParam("private","true").restrictToRoles(["admin","super"]),send200);
-
+	// only authorized if the request parameter "private" has the value "true", and then restrict to logged in
+	app.get("/secure/conditionalDirect",cansec.ifParam("private","true").restrictToLoggedIn,send200);
+	app.get("/secure/conditionalIndirect",cansec.ifParam("private","true").restrictToRoles(["admin","super"]),send200);
+```
 
 And if you prefer declarative authorization, even easier:
 
-    // inside app.js:
+```Javascript
+// inside app.js:
 		
-		// instantiate the user validator
-		app.use(cansec.validate);
-    // instantiate the declarative authorizer
-		app.use(cansec.authorizer(pathToAuthConfigFile));
+// instantiate the user validator
+app.use(cansec.validate);
+// instantiate the declarative authorizer
+app.use(cansec.authorizer(pathToAuthConfigFile));
 		
-		// inside "pathToAuthConfigFile"
-		{
-			"routes": [
-			  // [verb,path,default,[test params,] test condition]
-				["GET","/api/user","user.roles.admin === true"],
-				["GET","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
-				["GET","/api/user/:user",{"private":"true"},"user.roles.admin === true || user.id === req.param('user')"],
-				["PUT","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
-				["GET","/api/user/:user/roles","user.roles.admin === true || user.id === req.param('user')"],
-				["PUT","/api/user/:user/roles","user.roles.admin === true"]
-			]	
-		}
+// inside "pathToAuthConfigFile"
+{
+	"routes": [
+		// [verb,path,default,[test params,] test condition]
+		["GET","/api/user","user.roles.admin === true"],
+		["GET","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
+		["GET","/api/user/:user",{"private":"true"},"user.roles.admin === true || user.id === req.param('user')"],
+		["PUT","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
+		["GET","/api/user/:user/roles","user.roles.admin === true || user.id === req.param('user')"],
+		["PUT","/api/user/:user/roles","user.roles.admin === true"]
+	]	
+}
 		
-
+```
 
 #### Changes
 For any breaking changes, please see the end of this README.
@@ -82,8 +84,9 @@ You can tell cansecurity to manage your authorization imperatively (via middlewa
 ## Installation
 Installation is simple, just install the npm module:
 
-    npm install cansecurity
-
+```
+npm install cansecurity
+```
 
 ## Authentication
 ### Usage
@@ -92,10 +95,10 @@ First *initialize* your cansecurity instance, then use its *validation* to valid
 #### Initialization
 To initialize cansecurity, you must first require() it, and then init() it, which will return the middleware you can use:
 
-````JavaScript
+```JavaScript
 var cs = require('cansecurity');
 var cansec = cs.init(initConfig);
-````
+```
 
 The `initConfig` has six properties:
 
@@ -110,32 +113,37 @@ The `initConfig` has six properties:
 #### Validation
 Validation is straightforward. Once you have set up cansecurity properly, it functions as standard expressjs middleware:
 
-    app.use(cansec.validate);
-		app.use(app.router);
+```Javascript
+app.use(cansec.validate);
+app.use(app.router);
+```
 
 This should be done **before** your router.
 
 If the user is successfully authenticated, then the user object will be placed in two locations:
 
-    req["X-CS-Auth"];
-    req.session["X-CS-AUTH"].user;  // only if expressjs sessions have been enabled
+```Javascript
+req["X-CS-Auth"];
+req.session["X-CS-AUTH"].user;  // only if expressjs sessions have been enabled
+```
 
 However, for safety, you should retrieve it using the convenience method:
 
-````JavaScript
+```JavaScript
+
 require('cansecurity').getUser(req);
 // or simply
 cs.getUser(req);
-````
+```
 
 You can also determine *how* the current user was authorized, credentials (e.g. password) and token, by calling 
 
-````JavaScript
+```JavaScript
 require('cansecurity').getAuthMethod(req);
 // returns "credentials" or "token"
 // or simply
 cs.getAuthMethod(req);
-````
+```
 
 This is very useful in cases when you need the existing password for an action. A common use case is changing a password or setting security parameters. You might be fine with the user logging in via token for most actions (happens all the time when you go back to Facebook or Twitter from the same browser as last time), but if they want to change their password, they need to send the password again (try changing your Facebook or Gmail password, or Gmail two-factor autnentication).
 
@@ -145,11 +153,15 @@ The **only** required option to `cs.init()` is the function to allow cansecurity
 
 Must have the following signature
 
-    validate(username,password,callback);
+```Javascript
+validate(username,password,callback);
+```
 
 The `validate()` function is expected to retrieve user information from your preferred user store. It *may* validate a password for the user as well, and indicate to the callback if it succeeded or failed. The signature and expected parameters to the callback are as follows:
 
-    callback(success,user,message,pass);
+```Javascript
+callback(success,user,message,pass);
+```
 
 Where:
   `success`: boolean, if we succeeded in retrieving the user and, if requested, validating password credentials
@@ -159,7 +171,7 @@ Where:
 
 If the user was already authenticated via session, token or some other method, then `validateUser()` will be called with `password` parameter set to `undefined`. If `password` is set to **anything** other than `undefined` (including a blank string), then `validateUser()` is expected to validate the password along with retrieving the user.
 
-````JavaScript
+```JavaScript
 cansec.init({
 	validate: function(username,password,callback) {
 		if (password !== undefined) {
@@ -204,7 +216,9 @@ cansecurity passes details about success or failure of authentication in custom 
 #### X-CS-Auth Header
 The X-CS-Auth response header contains error responses or success tokens. If authentication was successful, by any means, then a new header is generated with each request. This header is of the following format:
 
-    success=sha1hash:username:expiry
+```
+success=sha1hash:username:expiry
+```
 
 Where:
 	`sha1hash` = a sha1 hash of the username, the expiry, the secret session key and the user's unique string (likely itself a hashed password).
@@ -223,8 +237,9 @@ The X-CS-User response header contains the actual logged in user when authentica
 #### CORS
 Note for usage in CORS situations. cansecurity automatically adds the following header to every response:
 
-    Access-Control-Expose-Headers: X-CS-Auth,X-CS-User
-
+```
+Access-Control-Expose-Headers: X-CS-Auth,X-CS-User
+```
 Of course, it does so intelligently, so it adds it to an existing list of headers (does not trounce them) or creates it.
 
 ### Performance
@@ -294,7 +309,7 @@ cansecurity authorization also includes conditionals, allowing the authorization
 ### Middleware Authorization
 This is the traditional express usage: declare a route, chain up some middleware functions. The easiest way to demonstrate this is with an example, following which we will describe all of the options and APIs.
 
-````JavaScript
+```JavaScript
 express = require('express'),
 cansec = require('cansecurity').init({});
 server = express.createServer();
@@ -302,7 +317,7 @@ server = express.createServer();
 app.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler);
 app.get("/some/route",cansec.ifParam("private","true").restrictToRoles("admin"),routeHandler);
 
-````
+```
 
 #### Usage
 Usage of cansecurity authorization is only possible if you are using cansecurity authentication as well. To use authorization, you do two steps: initialization and middleware.
@@ -310,16 +325,16 @@ Usage of cansecurity authorization is only possible if you are using cansecurity
 ##### Initialization
 The authorization component of cansecurity is initialized at the same time as the authentication component:
 
-````JavaScript
+```JavaScript
 var cs = require('cansecurity'), cansec;
 cansec = cs.init({});
-````
+```
 
 or more simply:
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({});
-````
+```
 
 In initialization, you set two key authorization parameters as properties of the config object passed to cs.init(). Both are objects and both are optional.
 
@@ -334,7 +349,7 @@ Initialization returns the object that has the restrictTo* middleware.
 ##### Middleware
 As in the example above, once you have authentication and authorization set up and initialized, you may use authorization middleware:
 
-````JavaScript
+```JavaScript
 // execute routeHandler() if user is logged in, else send 401
 app.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler); 
 // execute routeHandler if req.param("user") === user[fields.id], where 'user' is as returned by validate(), else send 401
@@ -346,7 +361,7 @@ app.get("/admin/:user",cansec.restrictToRoles("admin"),routeHandler);
 //     req.param("secret") === "true" && user[fields.roles] contains "admin"
 app.get("/user",cansec.ifParam("secret","true").restrictToRoles("admin"),routeHandler);
 
-````
+```
 
 #### Unauthorized Errors
 cansecurity authorization will directly return a `403` and message `unauthorized` if authorization is required, i.e. a restrictTo* middleware is called, **and** fails. 
@@ -364,13 +379,13 @@ Regular API interfaces are used to restrict access, each example is given below.
 
 * restrictToLoggedIn - user must have logged in
 
-````JavaScript
+```JavaScript
 app.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler);
-````
+```
 
 * restrictToSelf - user must have logged in and the user ID in the user object from authentication (fields.id above) must equal some parameter in the URL or body (params.id)
 
-````JavaScript
+```JavaScript
 var cs = require('cansecurity');
 cansec = cs.init({
 	fields: {id: "userid"},
@@ -379,11 +394,11 @@ cansec = cs.init({
 // only allow a person to see their own stuff
 app.get("/some/route/:user",cansec.restrictToSelf,routeHandler);
 // note that the param in the route is ":user", which matches the params.id:"user" in cansec.init()
-````
+```
 
 * restrictToRoles - user must have logged in and the user must have in his/her "roles" property (fields.roles) in the user object from authentication one of the named roles (one role as string or multiple in array). Roles argument to the function may be a string or an array of strings.
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
@@ -394,7 +409,7 @@ app.get("/api/siteadmin",cansec.restrictToRoles(["admin","superadmin"]),routeHan
 ````
 * restrictToSelfOrRoles - combination of the previous two. Roles argument to the function may be a string or an array of strings.
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
@@ -405,11 +420,11 @@ app.put("/api/user/:user",cansec.restrictToSelfOrRoles("admin"),routeHandler);
  * 1) The logged in user has a property "userid" and it matches exactly the value of the param ":user"; OR
  * 2) The logged in user has a property "roles" which is an array of strings, one of which is "admin"
  */
-````
+```
 
 * restrictToParam - user must have logged in and some field in the user object (fields.id) from authentication must equal some parameter in the URL or body (params.id). Param argument to the function may be a string or an array of strings.
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
@@ -419,11 +434,11 @@ app.put("/api/user/search",cansec.restrictToParam("searchParam"),routeHandler);
  * Will work if the logged in user has a property "userid" (since init() set fields.id to "userid"), and the value of that property matches req.param("searchParam"). 
  * Useful for using parameters in searches.
  */
-````
+```
 	
 * restrictToParamOrRoles - user must have logged in and some field in the user object (fields.id) from authentication must equal some parameter in the URL or body (params.id) *or* user must have a specific role. Param argument and roles argument to the function may each be a string or an array of strings.
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
@@ -435,11 +450,11 @@ app.put("/api/address/search",cansec.restrictToParamOrRoles(["searchParam","addP
  * 1) the logged in user has a property "userid" (since init() set fields.id to "userid"), and the value of that property matches req.param("searchParam"), or, in the second example, one of "searchParam" or "addParam". 
  * 2) The logged in user has the role, as one of the array of strings of the property "roles", set to "admin" or "superadmin" (for the first example), or "admin" (for the second example).
  */
-````
+```
 
 * restrictToField - user must have logged in and some field in the user object (fields.id) from authentication must equal the response to a given callback with a given field or fields parameter.
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
@@ -448,11 +463,11 @@ app.get("/api/user/search",cansec.restrictToField("owner",getObjectFn),routeHand
 /*
  * Will call getObjectFn(req,res) to get a regular JavaScript object, and then try to match the requested fields, in the above example "owner", to the ID of the User from authentication. The ID from authentication is user.userid, as given in the init() for fields.id.
  */
-````
+```
 
 * restrictToFieldOrRoles - user must have logged in and some field in the user object (fields.id) from authentication must equal the response to a given callback with a given field or fields parameter, *or* the user must have a role or roles.
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
@@ -462,39 +477,39 @@ app.get("/api/user/search",cansec.restrictToFieldOrRoles("owner","admin",getObje
 * Will call getObjectFn(req,res) to get a regular JavaScript object, and then try to match the requested fields, in the above example "owner", to the ID of the User from authentication. The ID from authentication is user.userid, as given in the init() for fields.id.
  */
 app.get("/api/user/search",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","superadmin"],getOwnerFn),routeHandler);
-````
+```
 
 A typical use case for restrictToField and its variant restrictToFieldOrRoles is that you may load an object, and want to restrict its access to the owner of an object. For example, let us assume that you are loading an employee record. For that, restrictToSelf would be fine, since the User ID from authentication is likely to match the ID for requesting the employee record. The following example shows this use case:
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
 app.get("/api/employee/:user",cansec.restrictToSelfOrRoles("admin"),sendDataFn);
-````
+```
 
 However, what if you are retrieving a record whose authorization requirements are not known until it is loaded. For example, you are loading a paystub, whose URL is /api/paystubs/34567. Until you load the paystub, you don't actually know who the owner is. Of course, you might make it accessible only via a more detailed API as /api/employee/12345/paystubs/34567, but let us assume that you need to do it directly, with the first simplified API. Until you load the actual paystubs object, and see that the employee is, indeed, 12345, the one who logged in, you don't know whether or not to show it. The following example describes how to simply implement this use case:
 
-````JavaScript
+```JavaScript
 var cansec = require('cansecurity').init({
 	fields: {id: "userid", roles:"roles"},
 	params: {id: "user"}
 });
 app.get("/api/employee/:user",cansec.restrictToSelfOrRoles("admin"),sendDataFn);
 app.get("/api/paystub/:payid",payStubLoad,cansec.restrictToField("employee",getObjectFn),sendDataFn);
-````
+```
 
 In this example, we load the paystub, but do not send it. The paystub object retrieved by payStubLoad looks like this:
 
-````JavaScript
+```JavaScript
 {
 	id: "34567",
 	employee: "12345",
 	date: "2011-01-31",
 	amount: "$100"
 }
-````
+```
 This is then stored in the request object. Now getObjectFn can return the same object, which has employee as "12345". This is then matched to User.userid, which will allow it to proceed.
 
 ##### Conditional API
@@ -505,9 +520,9 @@ The conditional API simply creates conditions under which the regular restrictio
 
 What if you have a resource that is normally accessible by all, but if certain parameters are applied, e.g. ?secret=true, then it should be restricted to an admin?
 
-````JavaScript
+```JavaScript
 app.get("/api/employee",cansec.ifParameter("secret","true").restrictToRoles("admin"),sendDataFn);
-````
+```
 
 In the above example, anyone can do a GET on /api/employee, but if they pass the parameter ?secret=true, then they will have to be logged in and have the role "admin" defined. 
 
@@ -533,17 +548,17 @@ app.get("/logout",function(req, res){
 #### Deny All
 If you want to deny access to everything - always send a 403 - unless it is *explicitly* approved, just add a "deny all" line at the end of your routes.
 
-````JavaScript
+```JavaScript
 app.get("/api/employee/:user",cansec.restrictToSelfOrRoles("admin"),sendDataFn);
 app.get("/public/page",send200);
 // lots more 
 app.get("*",function(req,res,next){res.send(403);});
-````
+```
 
 ### Declarative Authorization
 Declarative authorization is given to drastically clean up your authorizations. Normal cansecurity authorization lets you inject authorization into every route, like so.
 
-````JavaScript
+```JavaScript
 app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
 app.get("/secure/user/:user",cansec.restrictToSelf,send200);
 app.get("/secure/roles/admin",cansec.restrictToRoles("admin"),send200);
@@ -567,7 +582,7 @@ app.get("/secure/fieldsOrRoles",cansec.restrictToFieldOrRoles(["owner","recipien
 // only authorized if the request parameter "private" has the value "true", and then restrict to logged in
 app.get("/secure/conditionalDirect",cansec.ifParam("private","true").restrictToLoggedIn,send200);
 app.get("/secure/conditionalIndirect",cansec.ifParam("private","true").restrictToRoles(["admin","super"]),send200);
-````
+```
 
 This is worlds better than before, when authorization was one of:
 
@@ -577,7 +592,7 @@ This is worlds better than before, when authorization was one of:
 
 But it still requires lots of code in the routes. What if you could just declare in a config file what authorization rules you want?
 
-````JavaScript
+```JavaScript
 {
 	"routes": [
 	  // [verb,path,[test params,][require logged in],[loader,]test condition]
@@ -589,7 +604,7 @@ But it still requires lots of code in the routes. What if you could just declare
 		["PUT","/api/user/:user/roles","user.roles.admin === true"]
 	]	
 }
-````
+```
 
 cansecurity provides you precisely this ability!
 
@@ -602,7 +617,7 @@ To use declarative authorization, you take two steps:
 #### Config File
 The config file is a simple `json` file. You can name it whatever you want. The file should be a single object, with one key, `routes`, which is an array of arrays.
 
-````JavaScript
+```JavaScript
 {
 	routes:[
 	  [/* route 1 */],
@@ -611,11 +626,13 @@ The config file is a simple `json` file. You can name it whatever you want. The 
 	  [/* route n */]
 	]
 }
-````
+```
 
 Each route is an array of 4 or 5 parts, as follows:
 
-    [verb,route,[params,][loggedIn,][loader,]condition]
+```
+[verb,route,[params,][loggedIn,][loader,]condition]
+```
 
 * verb: string, one of GET PUT POST DELETE, and is case-insensitive
 * route: string, an express-js compatible route, e.g. "/api/user/:user" or "/post/:post/comment/:comment". Note that ".:format?" is optional. See "format" later.
@@ -626,7 +643,7 @@ Each route is an array of 4 or 5 parts, as follows:
 
 Here are some examples.
 
-````JavaScript
+```JavaScript
 // when GET /api/user, send 403 unless user.roles.admin === true
 ["GET","/api/user","user.roles.admin === true"],
 
@@ -654,12 +671,12 @@ Here are some examples.
 
 // when PUT /api/user/:user/roles, run the "roles" loader, then send 403 unless user.roles.admin === true || item.name === 'me'
 ["PUT","/api/user/:user/roles","roles","(user.roles.admin === true) || (item.name === 'me')"]
-````
+```
 
 #### Deny All
 If you want to deny access to everything - always send a 403 - unless it is *explicitly* approved, just add a "deny all" line at the end of your declarative routes.
 
-````JavaScript
+```JavaScript
 // when PUT /api/user/:user/roles, send 403 unless user.roles.admin === true
 ["PUT","/api/user/:user/roles","user.roles.admin === true"]
 
@@ -668,7 +685,7 @@ If you want to deny access to everything - always send a 403 - unless it is *exp
 
 // deny everything else
 ["GET","*","false"]
-````
+```
 
 
 #### Context for the Condition
@@ -695,7 +712,7 @@ The full suite of `request`, `response` and `next` methods is available. Thus, y
 
 Here is an example:
 
-````JavaScript
+```JavaScript
 cansec.init({
 	loader: {
 		group: function(req,res,next) {
@@ -706,17 +723,17 @@ cansec.init({
 		}
 	}
 });
-````
+```
 
 And the declarative:
 
-````JavaScript
+```JavaScript
 {
 	routes: [
 		["GET","/api/group/:group",true,"group","_.contains(item.members,user.id)"]
 	]
 }
-````
+```
 
 
 **Note:** Any route where login is required, login will be validated *before* running the loader.
@@ -726,7 +743,7 @@ So where do you actually define the loader functions? You have two options for w
 ##### Global
 If you have or want a single loader, you can pass all of your loader functions into `cansec.init()`:
 
-````JavaScript
+```JavaScript
 cansec.init({
 	loader:  {
 		user: function(req,res,next) {
@@ -735,44 +752,43 @@ cansec.init({
 		}
 	}
 });
-````
+```
 
 And the declarative part:
 
-````JavaScript
+```JavaScript
 {
 	routes: [
 		["GET","/api/group/:group",true,"group","_.contains(item.members,user.id)"]
 	]
 }
-````
+```
 
 ##### Local
 You can define the loader functions in a file local to a certain declarative file:
 
-````JavaScript
+```JavaScript
 // in your main server.js
 app.use(cansec.authorizer(__dirname+'/path/to/decl.json',{loader: {
 	fn1: function(req,res,next){},
 	fn2: function(req,res,next){} 
-}}))`
-````
+}}))
+```
 
 Of course, you can always separate the loader functions into another file, like with the init file, and `require` it yourself:
 
-````JavaScript
+```JavaScript
 // in your main server.js
-app.use(cansec.authorizer(__dirname+'/path/to/decl.json',{loader: require(pathToLoader)}))`
-````
-
+app.use(cansec.authorizer(__dirname+'/path/to/decl.json',{loader: require(pathToLoader)}))
+```
 
 If you can do it globally, why bother with the local? Simple. You can have *multiple* declarative files. For example, we often separate the security authorization (user Jim is allowed to see his own account) from subscription authorization (user Jim already has 2 accounts and needs to upgrade his plan to get another).
 
-````JavaScript
+```JavaScript
 // in your main server.js
-app.use(cansec.authorizer(__dirname+'/path/to/security.json',{loader:securityConfig}))`
-app.use(cansec.authorizer(__dirname+'/path/to/plans.json',{loader:plansConfig}))`
-````
+app.use(cansec.authorizer(__dirname+'/path/to/security.json',{loader:securityConfig}))
+app.use(cansec.authorizer(__dirname+'/path/to/plans.json',{loader:plansConfig}))
+```
 
 If course, you might want to keep them together, in which case just use the global!
 
@@ -806,31 +822,34 @@ The logic is as follows:
 #### Use the authorizer
 Simple:
 
-    app.use(cansec.authorizer(pathToConfigFile,options));
-		app.use(app.router);
-		
+```javascript
+app.use(cansec.authorizer(pathToConfigFile,options));
+app.use(app.router);
+```
+
 Done!
 
 
 #### Path Format
 Many REST paths use a "format" extension. In express, it usually looks like this:
 
-````JavaScript
+```JavaScript
 app.get("/api/user/:user.:format?",fn);
-````
+```
 
 This allows express to handle both `/api/user/10` and `/api/user/10.json`.
 
 cansecurity's declarative authorization *can* handle `.:format?` just by putting it in the path:
 
-    ["GET","/api/user/:user.:format?",{"private":"true"},true,"user.roles.admin === true || user.id === req.param('user')"],
-
+```javascript
+["GET","/api/user/:user.:format?",{"private":"true"},true,"user.roles.admin === true || user.id === req.param('user')"],
+```
 
 But that can get tedious, if you have a lot of routes. To simplify things, one of the options when setting it up is `{format:true}` as follows:
 
-````JavaScript
+```JavaScript
 app.use(cansec.authorizer(pathToConfigFile,{format:true}));
-````
+```
 
 If `format` is set to `true`, then cansecurity will *automatically* add `.:format?` to every path that does not end in `.:format?` already, or in `/`.
 
@@ -842,9 +861,10 @@ To run the tests, from the root directory, run `npm test` or more directly `moch
 
 To bypass this issue, run tests *twice*:
 
-    mocha -g express
-		mocha -g restify
-
+```
+mocha -g express
+mocha -g restify
+```
 
 
 ## Breaking Changes
@@ -860,24 +880,29 @@ restify is now fully supported and tested for. However, restify 2.8.0 or higher 
 
 Additionally, because the tests trounce each other, run each separately when testing:
 
-    mocha -g express
-		mocha -g restify
-		
+```
+mocha -g express
+mocha -g restify
+```		
 
 
 #### Changes to version 0.6.4
 Declarative authorization no longer has an option to "allow" or "deny" by default. **All** rules are "deny" unless the condition passes. It is very easy to invert the condition and make it pass except in certain circumstances.
 
-    ["GET","/secure/path",true,"allow","a === b"]
-		
+```javascript
+["GET","/secure/path",true,"allow","a === b"]
+```
+
 Can just as easily be written as
 
-    ["GET","/secure/path",true,"deny","a !== b"]
-
+```javascript
+["GET","/secure/path",true,"deny","a !== b"]
+```
 Or more simply
 
-    ["GET","/secure/path",true,"a !== b"]
-
+````javascript
+["GET","/secure/path",true,"a !== b"]
+````
 
 #### Changes to version 0.6.0
 Prior to version 0.6.0, cansecurity *sometimes* would send back a 401 or 403 as `res.send(401,"unauthenticated")` or `res.send(403,"unauthorized")`, and sometimes would just call `next({status:401,message:"unauthenticated"})` or `next({status:403,message:"unauthorized"})`.
