@@ -907,7 +907,7 @@ Or more simply
 #### Changes to version 0.6.0
 Prior to version 0.6.0, cansecurity *sometimes* would send back a 401 or 403 as `res.send(401,"unauthenticated")` or `res.send(403,"unauthorized")`, and sometimes would just call `next({status:401,message:"unauthenticated"})` or `next({status:403,message:"unauthorized"})`.
 
-Beginnign with version 0.6.0, cansecurity will **always** return 401 if authentication is required and not present / fails, and will **always** return a 403 if authorization is required and fails.
+Beginning with version 0.6.0, cansecurity will **always** return 401 if authentication is required and not present / fails, and will **always** return a 403 if authorization is required and fails.
 
 This makes the results far more consistent.
 
