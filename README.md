@@ -184,7 +184,7 @@ cansec.init({
 ````
 
 ### Unauthenticated Errors
-When authnetication fails, cansecurity will directly return 401 with the message "unauthenticated". 
+When authentication fails, cansecurity will directly return 401 with the message "unauthenticated". 
 
 * If authentication is required and succeeds, it will set request["X-CS-Auth"], and request.session["X-CS-Auth"] if sessions are enabled, and then call next() to jump to the next middleware. 
 * If authentication is required and fails, it will return `401` with the text message `unauthenticated`
