@@ -144,7 +144,7 @@ require('cansecurity').getAuthMethod(req);
 cs.getAuthMethod(req);
 ```
 
-This is very useful in cases when you need the existing password for an action. A common use case is changing a password or setting security parameters. You might be fine with the user logging in via token for most actions (happens all the time when you go back to Facebook or Twitter from the same browser as last time), but if they want to change their password, they need to send the password again (try changing your Facebook or Gmail password, or Gmail two-factor autnentication).
+This is very useful in cases when you need the existing password for an action. A common use case is changing a password or setting security parameters. You might be fine with the user logging in via token for most actions (happens all the time when you go back to Facebook or Twitter from the same browser as last time), but if they want to change their password, they need to send the password again (try changing your Facebook or Gmail password, or Gmail two-factor authentication).
 
 
 ### Required Options
@@ -956,7 +956,7 @@ Or more simply
 #### Changes to version 0.6.0
 Prior to version 0.6.0, cansecurity *sometimes* would send back a 401 or 403 as `res.send(401,"unauthenticated")` or `res.send(403,"unauthorized")`, and sometimes would just call `next({status:401,message:"unauthenticated"})` or `next({status:403,message:"unauthorized"})`.
 
-Beginnign with version 0.6.0, cansecurity will **always** return 401 if authentication is required and not present / fails, and will **always** return a 403 if authorization is required and fails.
+Beginning with version 0.6.0, cansecurity will **always** return 401 if authentication is required and not present / fails, and will **always** return a 403 if authorization is required and fails.
 
 This makes the results far more consistent.
 
