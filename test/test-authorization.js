@@ -1,5 +1,5 @@
 /*jslint node:true, nomen:true, unused:vars */
-/*global before, it, describe, after */
+/*global before, it, describe */
 var express = require('express'), restify = require('restify'), app = express(), request = require('supertest'),
 cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'),
 r, path, q, unauthenticated = "unauthenticated", unauthorized = "unauthorized",
@@ -351,9 +351,6 @@ describe('authorization', function(){
 			app.use(cansec.validate);
 			setpaths();
 			r = request(app);
-		});
-		after(function(){
-			app.close();
 		});
 		alltests();
 	});

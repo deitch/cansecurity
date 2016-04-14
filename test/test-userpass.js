@@ -1,5 +1,5 @@
-/*jslint node:true, unused:vars */
-/*global before,it,describe,after */
+/*jslint unused:vars */
+/*global before,it,describe */
 var express = require( 'express' ),
 	restify = require( 'restify'),
 	app,
@@ -24,10 +24,10 @@ alltests = function () {
 		} );
 	} );
 	it( 'should have error header for bad credentials', function ( done ) {
-		r.get( path ).auth( "john", "ABCD" ).expect( 401 ).expect( authHeader, "error=invalidpass", done );
+		r.get( path ).auth( "john", "ABCD" ).expect( 401 ).expect( authHeader, "error invalidpass", done );
 	} );
 	it( 'should have correct header for good credentials', function ( done ) {
-		var re = /^success=/;
+		var re = /^success /;
 		r.get( path ).auth( "john", "1234" ).expect( 200 ).expect( authHeader, re, done );
 	} );		
 };
@@ -61,9 +61,6 @@ describe( 'userpass', function () {
 				require('../lib/sender')(res,200);
 			} );
 			r = request( app );
-		});
-		after(function(){
-			app.close();
 		});
 		alltests();
 	});

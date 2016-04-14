@@ -104,10 +104,9 @@ The `initConfig` has six properties:
 
 * `sessionExpiry`: OPTIONAL. Integer in minutes how long sessions should last, default is `15`. Used both for expressjs sessions and CS sessions. Setting `sessionExpiry` will **only** affect how long a session is valid **for cansecurity**. It will **not** affect the underlying expressjs session itself.
 * `sessionKey`: OPTIONAL. String. Secret key shared between nodejs servers to provide single-sign-on. This is a string. The default, if none is provided, is a random 64-character string. This is **required** if you want to take advantage of cansecurity's stateless sessions. Keep this very secret.
-* `validate`: REQUIRED. Function that will get a user by username, and possibly validate a their password, asynchronously. For more details, see below.
-* `encryptHeader`: OPTIONAL. With a value of true, the exposed headers (`X-CS-Auth` and `X-CS-User`) are encrypted using `rc4-hmac-md5` algorithm.
-* `authHeader`: OPTIONAL. Replaces the Auth header `X-CS-Auth` for the specified header name.
-* `userHeader`: OPTIONAL. Replaces the User header `X-CS-User` for the specified header name.
+* `validate`: REQUIRED. Function that will get a user by username, and possibly validate their password, asynchronously. For more details, see below.
+* `encryptHeader`: OPTIONAL. With a value of true, the entire JWT is encrypted using `rc4-hmac-md5` algorithm.
+* `authHeader`: OPTIONAL. Replaces the header `X-CS-Auth` in which the server sends its token and user information back to the requestor/browser with the specified header name. `X-CS-Auth` is used *only* for sending the request from the server to the requestor (browser). The request to the server *always* is `Authentication`.
 * `debug`: OPTIONAL. Print debug messages about each authentication attempt to the console. It will **not** include the actual password.
 
 #### Validation
@@ -160,14 +159,13 @@ validate(username,password,callback);
 The `validate()` function is expected to retrieve user information from your preferred user store. It *may* validate a password for the user as well, and indicate to the callback if it succeeded or failed. The signature and expected parameters to the callback are as follows:
 
 ```Javascript
-callback(success,user,message,pass);
+callback(success,user,message);
 ```
 
 Where:
   `success`: boolean, if we succeeded in retrieving the user and, if requested, validating password credentials
-	`user` = the actual user object. This can be a function, a JavaScript object, anything you want. It will be placed inside the session and the request for you to use later. If retrieval/validation was successful, this must not be null/undefined.
+	`user`: the actual user object. This can be a function, a JavaScript object, anything you want. It will be placed inside the session and the request for you to use later. If retrieval/validation was successful, this must not be null/undefined.
 	`message` = the error message in case of retrieval/validation failure. This can be anything you want, and will be passed along with the 401 unauthenticated response. 
-	`pass` = the user's password or any other unique per-user string, not easily guessable. Commonly, this would be a hash of a password.
 
 If the user was already authenticated via session, token or some other method, then `validateUser()` will be called with `password` parameter set to `undefined`. If `password` is set to **anything** other than `undefined` (including a blank string), then `validateUser()` is expected to validate the password along with retrieving the user.
 
@@ -184,62 +182,88 @@ cansec.init({
 ````
 
 ### Unauthenticated Errors
-When authnetication fails, cansecurity will directly return 401 with the message "unauthenticated". 
+When authentication fails, cansecurity will directly return 401 with the message "unauthenticated". 
 
 * If authentication is required and succeeds, it will set request["X-CS-Auth"], and request.session["X-CS-Auth"] if sessions are enabled, and then call next() to jump to the next middleware. 
 * If authentication is required and fails, it will return `401` with the text message `unauthenticated`
 * If authentication is **not** required, it will jump to the next middleware 
 
-If the user has provided HTTP Basic Authentication credentials in the form of username/password **and** the authentication via `validate()` fails. In that case, cansecurity will call 
+If the user has provided HTTP Basic Authentication credentials in the form of username/password **and** the authentication via `validate()` fails. In that case, cansecurity will return a `401`.
 
-
-### Why We Need the "Password" in the Validate() Callback
-The callback to `validate()` expects you to return a "pass", or any user-unique string. Although this is never given to any other function, let alone to the client, why is the "pass" necessary? 
-
-In reality, this can be any unique string at all, as long as it is consistent for the same user. Normally, this would be a hashed password. This is used, along with the secret session key, to create the authtoken for cansecurity sessions. Without using the password or some other unique, non-guessable string, it would be theoretically possible to use one login to spoof another. With the unique non-guessable user string (hashed password or similar) as part of the hash input, this risk is mitigated. PLEASE *PLEASE* **PLEASE** do not pass cleartext passwords here. In reality, your app should never know cleartext passwords, rather storing them as SHA1 or similar hashes. 
-
-Thus, to create a unique authentication token that is useful for single-sign-on and cannot be spoofed to another user, we include the unique user string (e.g. a hashed password) as part of the input to the authentication token.
 
 ### How Authentication Works
 With each request, the following algorithm is followed:
 
-1. Was there an HTTP Basic authentication header? If so, validate using the credentials. If they succeed, the user is authenticated, else send back a 401 unauthenticated and include a response X-CS-Auth header of "error=invalidpass". If not, go to the next step.
-2. Was there an X-CS-Auth header? If so, validate using the auth header. If they success, the user is authenticated, else they are not. The requests will continue, but the response will contain an X-CS-Auth header of "error=invalidtoken". If not, go to the next step.
+1. Was there an HTTP Basic `Authentication` header? If so, validate using the credentials. If they succeed, the user is authenticated, else send back a `401` unauthenticated and include a response X-CS-Auth header of `"error invalidpass"`. If not, go to the next step.
+2. Was there an HTTP Bearer `Authentication` header? If so, validate the JSON Web Token using the auth header. If they succeed, the user is authenticated, else they are not and return a `401` with `error=invalidtoken`. If not, go to the next step.
 3. Is there a valid and non-expired expressjs session? If so, the user is authenticated. If not, go to the next step.
 4. The user is not authenticated.
 
 Note that failing to get an authentication for all of the above steps does **not** necessarily indicate that a 401 should be sent back. It is entirely possible that the user is accessing a resource that does not require authentication! This part of the cansecurity library is entirely about authentication; authorization is a different topic.
 
-### HTTP Response Headers
-cansecurity passes details about success or failure of authentication in custom `X-` HTTP response headers. Of course, a failed authentication will return a `401`, but the *reason* for failure will be in the appropriate header listed in this section. Similarly, a successful authentication - by *any* means - will allow the request to go through returning a `200`, `201`, `404`, etc., depending on the app. cansecurity will, however, return the session token and logged in user via appropriate HTTP response headers.
+To summarize:
 
-#### X-CS-Auth Header
-The X-CS-Auth response header contains error responses or success tokens. If authentication was successful, by any means, then a new header is generated with each request. This header is of the following format:
+* Passing credentials in an `Authentication` header (`Bearer` with JWT or `Basic` with username/password) that fail, **always** will return a `401`.
+* Passing no credentials but with a valid expressjs session will pass the request with the user as authenticated to the app.
+* Passing no credentials with no valid expressjs sessions will pass the request with the user as unauthenticated to the app.
+
+### HTTP Headers
+
+#### HTTP Response Header
+cansecurity passes details about success or failure of authentication in the custom `X-CS-Auth` HTTP response header. Of course, a failed authentication will return a `401`, but the *reason* for failure will be in the appropriate header listed in this section. Similarly, a successful authentication - by *any* means - will allow the request to go through returning a `200`, `201`, `403`, `404`, etc., depending on the app. cansecurity *will*, however, return the session token and logged in user via the `X-CS-Auth` HTTP response header.
+
+The `X-CS-Auth` response header contains error responses or success tokens. 
+
+##### Success
+
+A successful authentication provides the following format:
 
 ```
-success=sha1hash:username:expiry
+success token username expiry
 ```
 
 Where:
-	`sha1hash` = a sha1 hash of the username, the expiry, the secret session key and the user's unique string (likely itself a hashed password).
-	`username` = the user's username
-	`expiry` = when this auth token will expire, as a JavaScript (Unix) millisecond timestamp, provided by Date().getTime().
-	
-Essentially, we are using a message validation algorithm to validate that the username and expiry are, indeed, valid.
+	`success`: result of the authentication, either `success` or `error`
+	`token`: a JSON Web token if `success`, or an error message if `error`
+	`username`: the user's username if `success`
+	`expiry`: when this token will expire, as a JavaScript (Unix) second timestamp, provided by `Math.floor(new Date().getTime()/1000)`
 
-Because the auth header is created anew with each request, the expiry window is rolling - x minutes from the last valid request.
+Because a new token is created anew with each request, the expiry window is rolling - x minutes from the last valid request.
 
-#### X-CS-User Header
-The X-CS-User response header contains the actual logged in user when authentication by any means was successful. Normally, it is a JSON-encoded string, but it really depends on what your `validate()` function returns in the `user` parameter of the `callback`.
+Both the `username` and `expiry` are convenience methods. They are contained within the JSON Web Token provided in the response.
 
-**Note**: You need to be **really** careful with what `validate()` returns. *Everything* in there goes into the `X-CS-User` response header. While it only goes in the header to the authenticated user, it still is sending out everything you send. You might not want the password - even hashed - in the header fields.
+The JWT payload contains the following fields:
+
+* `sub`: the subject of the JWT. This is identical to the `username` field in the header response.
+* `exp`: the expiry of the token. This is identical to the `expiry` field in the header response.
+* `cs-user`: the actual logged in user when authentication by any means was successful. 
+
+
+The `cs-user` is a "JST private claim". Normally, it is a JSON-encoded string, but it really depends on what your `validate()` function returns in the `user` parameter of the `callback`.
+
+**Note**: You need to be **really** careful with what `validate()` returns. *Everything* in there goes into the `cs-user` field in the JWT. While it only goes in the header to the authenticated user, it still is sending out everything you send. You might not want the password - even hashed - in the header fields.
+
+
+##### Failure
+A failed authentication provides the following format:
+
+```
+error message
+```
+
+Where:
+	`result`: result of the authentication, either `success` or `error`
+	`message`: the error message, if any
+
+
 
 #### CORS
 Note for usage in CORS situations. cansecurity automatically adds the following header to every response:
 
 ```
-Access-Control-Expose-Headers: X-CS-Auth,X-CS-User
+Access-Control-Expose-Headers: X-CS-Auth
 ```
+
 Of course, it does so intelligently, so it adds it to an existing list of headers (does not trounce them) or creates it.
 
 ### Performance
@@ -260,13 +284,13 @@ cansec = cs.init({
 			callback(false,null,"invaliduser");
 		} else if (password === undefined) {
 			// never asked to check a password, just send the user - GOOD
-	    callback(true,user,user.name,shaHash(pass));
+	    callback(true,user,user.name);
 		} else if (user.pass !== pass) {
 			// asked to check password, but it didn't match - ERROR
 			callback(false,null,"invalidpass");
 		} else {
 			// user matches, password matches - GOOD
-			callback(true,user,user.name,shaHash(pass));
+			callback(true,user,user.name);
 		}
 	},
 	sessionKey: SESSIONKEY
@@ -855,19 +879,44 @@ If `format` is set to `true`, then cansecurity will *automatically* add `.:forma
 
 
 ## Testing
-To run the tests, from the root directory, run `npm test` or more directly `mocha`.
+To run the tests, from the root directory, run `npm test`.
 
 **Note:** Tests are set up both for express and for restify. However, running them both causes one to trounce the other. Apparently restify grabs hold of the http module and its server munges the requests that express tries to read. One cannot really blame restify; it never intended to run in the same node instance with another server.
 
 To bypass this issue, run tests *twice*:
 
 ```
-mocha -g express
+mocha -g '(?:restify)'
 mocha -g restify
 ```
 
+`npm` is set up to do precisely this for you, if you run `npm test`.
+
 
 ## Breaking Changes
+
+#### Changes to version 2.0.0
+2.0.0 is a major release with many breaking changes. 
+
+##### JWT instead of multiple headers
+The `X-CS-Auth` header is deprecated from requests. All credentials should be passed in the `Authentication` header, either `Basic` for user/pass authentication, or `Bearer` for a JSON Web Token that was generated by cansecurity.
+
+The `X-CS-User` header is deprecated from responses. All of the user information is now held as a field of the returned JWT.
+
+* Response: `X-CS-User` contains the status and JWT, which includes the user information.
+* Request: `Authorization` contains the credentials, either user/pass or JWT.
+
+##### Separation of fields by space instead of colon
+In a successful response, the fields are separated by whitespace instead of `:`:
+
+    X-CS-Auth: success token username expiry
+
+Instead of
+
+    X-CS-Auth: success=token:username:expiry
+
+##### Expiry in seconds instead of milliseconds
+In keeping with the JWT standard, the expiry field - both in the header and in the JWT - are given in timestamp seconds since epoch, instead of milliseconds.
 
 #### Changes to version 1.0.0
 Express 4 support!
@@ -932,3 +981,4 @@ Until version 1.0 of cansecurity, the legacy functions will continue to operate,
 		IF `validate()` is defined, THEN (`validatePassword()` and `getUser()`) will be ignored, whether present or not.
 
 Beginning with cansecurity 1.0, the old API will not function at all.
+

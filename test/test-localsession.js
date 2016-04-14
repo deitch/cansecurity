@@ -1,6 +1,7 @@
 /*jslint node:true, nomen:true, unused:vars */
-/*global before,it,describe,after */
+/*global before,it,describe */
 var express = require( 'express' ), restify = require('restify'),
+	jwt = require('jsonwebtoken'),
 	app,
 	cs = require( './resources/cs' ),
 	cansec,
@@ -10,17 +11,21 @@ var express = require( 'express' ), restify = require('restify'),
 	path = "/public",
 	r, async = require( 'async' ),
 	authHeader = "X-CS-Auth".toLowerCase(),
-	userHeader = "X-CS-User".toLowerCase(),
-	userInfo = JSON.stringify( {
+userInfo = JSON.stringify( {
 		name: "john",
 		pass: "1234",
 		age: 25,
 		id: 1,
 		roles: [ "admin" ]
 	} ),
-	successRe = /^success=(([^:]*):([^:]*):([^:]*))$/,
+	successRe = /^success ((\S+)\s(\S+)\s(\S+))$/,
 	user = "john",
 	pass = "1234",
+	checkUserInfo = function (res) {
+		var match = res.headers[ authHeader ].match( successRe ),
+		decoded = jwt.decode(match[2]);
+		return decoded["cs-user"] === userInfo;
+	},
 	alltests = function () {
 		it( 'should work with a local cookie', function ( done ) {
 			async.waterfall( [
@@ -29,7 +34,11 @@ var express = require( 'express' ), restify = require('restify'),
 				},
 				function ( res, cb ) {
 					var cookie = res.headers[ "set-cookie" ][ 0 ];
-					r.get( path ).set( "cookie", cookie ).expect( 200 ).expect( authHeader, successRe ).expect( userHeader, userInfo, cb );
+					r.get( path ).set( "cookie", cookie ).expect( 200 ).expect( authHeader, successRe ).expect(function (res) {
+						if (!checkUserInfo(res)) {
+							cb("Bad user info in JWT");
+						}
+					}).end(cb);
 				}
 			], done );
 		} );
@@ -45,18 +54,22 @@ var express = require( 'express' ), restify = require('restify'),
 						cb("Missing authHeader");
 					} else if (match[3] !== user) {
 						cb("Missing user in authHeader");
+					} else if (!checkUserInfo(res)) {
+							cb("Bad user info in JWT");
 					} else {
-					cookie = cookie.split( ";" )[ 0 ];
-					r.get( path ).set( "cookie", cookie ).expect( 200 ).expect( authHeader, successRe ).expect( userHeader, userInfo, cb );
-				}
+						cookie = cookie.split( ";" )[ 0 ];
+						r.get( path ).set( "cookie", cookie ).expect( 200 ).expect( authHeader, successRe, cb );
+					}
 				},
 				function ( res, cb ) {
 					var match = res.headers[ authHeader ].match( successRe );
 					if (match[3] !== user) {
 						cb("Missing user in header");
+					} else if (!checkUserInfo(res)) {
+						cb("Bad user info in JWT");
 					} else {
-					cb();
-				}
+						cb();
+					}
 				}
 			], done );
 		} );		
@@ -89,9 +102,6 @@ describe( 'local session', function () {
 				require('../lib/sender')(res,200);
 			} );
 			r = request( app );
-		});
-		after(function(){
-			app.close();
 		});
 		// restify does not have native sessions
 		//alltests();

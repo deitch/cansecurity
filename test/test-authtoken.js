@@ -1,6 +1,7 @@
 /*jslint node:true, unused:vars */
-/*global before,it,describe,after */
+/*global before,it,describe */
 var express = require( 'express' ), restify = require('restify'),
+	jwt = require('jsonwebtoken'),
 	app,
 	async = require( 'async' ),
 	cansec,
@@ -10,8 +11,10 @@ var express = require( 'express' ), restify = require('restify'),
 	tokenlib = require( '../lib/token' ),
 	request = require( 'supertest' ),
 	r,
+	now = function () {
+		return Math.floor(Date.now()/1000);
+	},
 	authHeader = "X-CS-Auth".toLowerCase(),
-	userHeader = "X-CS-User".toLowerCase(),
 	userInfo = JSON.stringify( {
 		name: "john",
 		pass: "1234",
@@ -19,39 +22,62 @@ var express = require( 'express' ), restify = require('restify'),
 		id: 1,
 		roles: [ "admin" ]
 	} ),
+	successRe = /^success ((\S+)\s(\S+)\s(\S+))$/,
+	checkUserInfo = function (res) {
+		var match = res.headers[ authHeader ].match( successRe ),
+		decoded = jwt.decode(match[2]);
+		// take JWT (match[2]), split on '.', base64 decode 2nd part (claims), 
+		//   check that the 'cs-user' claim is identical to userInfo
+		return decoded["cs-user"] === userInfo;
+	},
 	path = "/public", 
 	alltests = function () {
 		it( 'should reject invalid token', function ( done ) {
-			r.get( path ).set( authHeader, "blahblah" ).expect( 200 ).expect( authHeader, "error=invalidtoken", done );
+			r.get( path ).set( "Authorization", "Bearer blahblah" ).expect( 401 ).expect( authHeader, "error invalidtoken", done );
 		} );
 		it( 'should reject expired token', function ( done ) {
-			var token = tokenlib.generate( "john", "1234", new Date().getTime() - ( 24 * 60 * 60 * 1000 ) );
-			r.get( path ).set( authHeader, token ).expect( 200 ).expect( authHeader, "error=invalidtoken", done );
+			var token = tokenlib.generate( "john", "1234", now() - ( 24 * 60 * 60 ) );
+			r.get( path ).set( "Authorization", "Bearer "+token ).expect( 401 ).expect( authHeader, "error invalidtoken", done );
 		} );
 		it( 'should accept a valid token', function ( done ) {
-			var token = tokenlib.generate( "john", "1234", new Date().getTime() + 15 * 60 * 1000 ),
-				re = /^success=/;
-			r.get( path ).set( authHeader, token ).expect( 200 ).expect( authHeader, re, done );
+			var token = tokenlib.generate( "john", "1234", now() + 15 * 60 );
+			r.get( path ).set( "Authorization", "Bearer "+token ).expect( 200 ).expect( authHeader, successRe, done );
 		} );
 		it( 'should accept a valid token with user and date', function ( done ) {
 			var user = "john",
-				expiry = new Date().getTime() + 15 * 60 * 1000,
-				token = [ tokenlib.generate( user, "1234", expiry ), user, expiry ].join( ":" ),
-				re = /^success=/;
-			r.get( path ).set( authHeader, token ).expect( 200 ).expect( authHeader, re, done );
+				expiry = now() + 15 * 60,
+			token = tokenlib.generate( user, "1234", expiry );
+			r.get( path ).set( "Authorization", "Bearer "+token ).expect( 200 ).expect( authHeader, successRe, done );
 		} );
 		it( 'should allow to reuse a token', function ( done ) {
 			var user = "john",
-				token = tokenlib.generate( user, "1234", new Date().getTime() + 15 * 60 * 1000 ),
-				successRe = /^success=(([^:]*):([^:]*):([^:]*))$/;
+			token = tokenlib.generate( user, "1234", now() + 15 * 60 );			
 			async.waterfall( [
 
 				function ( cb ) {
-					r.get( path ).set( authHeader, token ).expect( 200 ).expect( authHeader, successRe ).expect( userHeader, userInfo, cb );
+					r.get( path )
+						.set( "Authorization", "Bearer "+token )
+						.expect( 200 )
+						.expect( authHeader, successRe )
+						.expect(function (res) {
+							if (!checkUserInfo(res)) {
+								throw new Error("unmatched userInfo "+tokenlib.cipher(userInfo));
+							}
+						})
+						.end(cb);
 				},
 				function ( res, cb ) {
 					var match = res.headers[ authHeader ].match( successRe );
-					r.get( path ).set( authHeader, match[ 1 ] ).expect( 200 ).expect( authHeader, successRe ).expect( userHeader, userInfo, cb );
+					r.get( path )
+						.set( "Authorization", "Bearer "+match[ 2 ] )
+						.expect( 200 )
+						.expect( authHeader, successRe )
+						.expect(function (res) {
+							if (!checkUserInfo(res)) {
+								throw new Error("unmatched userInfo "+tokenlib.cipher(userInfo));
+							}
+						})
+						.end(cb);
 				},
 				function ( res, cb ) {
 					var match = res.headers[ authHeader ].match( successRe );
@@ -61,7 +87,7 @@ var express = require( 'express' ), restify = require('restify'),
 						cb( "unmatched name" );
 					}
 				}
-			], done );
+			], done );			
 		} );
 	};
 describe( 'authtoken', function () {
@@ -84,6 +110,9 @@ describe( 'authtoken', function () {
 	});
 	describe('restify', function(){
 		before( function () {
+			// we need to handle the mess that restify creates
+			// we create a prototype chain for http.IncomingMessage, so when restify changes it, it changes the new middle layer,
+			// which we can restore
 			cansec = cs.init();
 			app = restify.createServer();
 			app.use( cansec.validate );
@@ -93,9 +122,6 @@ describe( 'authtoken', function () {
 			} );
 			r = request( app );
 		} );
-		after(function(){
-			app.close();
-		});
 		alltests();
 	});
 } );
