@@ -5,8 +5,6 @@ cansecurity is your **all-in-one** security library for user authentication mana
 
 You can use use authentication, per-route authorization, and even <u>declarative</u> authorization. You can authenticate against *any* authentication system you like, just provide the interface function.
 
-**As of version 0.7.0, we support both restify and express.**
-
 It's this simple:
     
 ```Javascript
@@ -74,7 +72,11 @@ app.use(cansec.authorizer(pathToAuthConfigFile));
 For any breaking changes, please see the end of this README.
 
 ### Authentication
-cansecurity will manage your user authentication, including managing stateless sessions. It can use either native express sessions and or its own **stateless** sessions. cansecurity stateless sessions can keep a user logged in automatically across multiple nodejs instances, essentially creating free single-sign-on.
+cansecurity will manage your user authentication, including cross-server stateless sessions. It can use either native express sessions and or its own **stateless** sessions. cansecurity stateless sessions can keep a user logged in automatically across multiple nodejs instances, essentially creating free single-sign-on.
+
+The flow looks like this:
+
+![swimlanes](./swimlane.png)
 
 ### Authorization
 cansecurity will handle authorization in your requests, determining if a user should be allowed to perform a certain request, based on your rules. 
