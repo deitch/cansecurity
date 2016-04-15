@@ -1,0 +1,14 @@
+{
+  "name": "cansecurity-example-app",
+  "url": "http://github.com/deitch/cansecurity",
+  "private": true,
+  "author": "Avi Deitcher <avi@deitcher.net>",
+  "engines": [
+    "node >= 4.0.0"
+  ],
+  "main": "./run.js",
+  "dependencies": {
+    "cansecurity": "~2.0.0",
+    "cors": "^2.7.1"
+  }
+}

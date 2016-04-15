@@ -272,58 +272,7 @@ Of course, it does so intelligently, so it adds it to an existing list of header
 Extensive performance testing has not been done. However, all of the algorithms are symmetric, which are very high-performance. The expensive part is validate(), which may require your app to look in a data source or database. However, since the majority of requests will simply hit the local session, the user will be stored locally, and it is not an issue. The hit will only be for the first authentication for each user, as well as when a user switches between nodejs servers using cansecurity stateless sessions.
 
 ### Example
-For a good example, see the test suite in test/test.js, specifically the section beginning cansec.init. It is reproduced below:
-
-```JavaScript
-var express = require('express'), app = express(), cs = require('cansecurity'), cansec,
-// static database for testing
-user = {name:"john",pass:"1234",age:25};
-
-cansec = cs.init({
-	validate: function(login,password,callback){
-		if (user.name !== login) {
-			// no such user - ERROR
-			callback(false,null,"invaliduser");
-		} else if (password === undefined) {
-			// never asked to check a password, just send the user - GOOD
-	    callback(true,user,user.name);
-		} else if (user.pass !== pass) {
-			// asked to check password, but it didn't match - ERROR
-			callback(false,null,"invalidpass");
-		} else {
-			// user matches, password matches - GOOD
-			callback(true,user,user.name);
-		}
-	},
-	sessionKey: SESSIONKEY
-});
-
-
-app.configure(function(){
-	app.use(express.cookieParser());	
-	app.use(express.session({secret: "agf67dchkQ!"}));
-	app.use(cansec.validate);
-	app.use(function(req,res,next){
-		// send a 200
-		sendResponse(req,res,200);
-	});
-});
-app.user(function(err,req,res,next){
-	var data;
-	if (err && err.status) {
-		// one of ours
-		data = err.message ? {message: err.message} : null;
-		sendResponse(req,res,err.status,data);
-	} else if (err && err.type && err.type === "unexpected_token") {
-		// malformed data
-		sendResponse(req,res,{message:err.type},400);
-	} else {
-		sendResponse(req,res,500);
-	}
-	
-});
-app.listen(PORT);
-```
+See the directory `./example/`
 
 ## Authorization
 Authorization is the process of checking if a user is **allowed** to perform a certain action (in our case, execute a certain route), assuming they have already been authenticated (or not).
