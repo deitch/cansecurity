@@ -9,6 +9,7 @@
   "main": "./run.js",
   "dependencies": {
     "cansecurity": "~2.0.0",
-    "cors": "^2.7.1"
+    "cors": "^2.7.1",
+    "express": "^4.13.4"
   }
 }
