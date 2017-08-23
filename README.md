@@ -706,7 +706,7 @@ And the declarative:
 ```JavaScript
 {
 	routes: [
-		["GET","/api/group/:group",true,"group","_.contains(item.members,user.id)"]
+		["GET","/api/group/:group",true,"group","_.includes(item.members,user.id)"]
 	]
 }
 ```
@@ -735,7 +735,7 @@ And the declarative part:
 ```JavaScript
 {
 	routes: [
-		["GET","/api/group/:group",true,"group","_.contains(item.members,user.id)"]
+		["GET","/api/group/:group",true,"group","_.includes(item.members,user.id)"]
 	]
 }
 ```

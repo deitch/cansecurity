@@ -4,23 +4,23 @@
 		["GET","/secure/denyAll","false === true"],
 		["GET","/secure/deny","req.query.abc === 'abc'"],
 		["GET","/secure/denyError","req.foo.a.b.c.d === 'q'"],
-		
+
 		["GET","/secure/parameter","true === true"],
 		["GET","/secure/parameter",{"private":"true"},"false === true"],
-		
+
 		["GET","/secure/chainedParameter","req.query.abc === 'abc'"],
 		["GET","/secure/chainedParameter",{"private":"true"},"false === true"],
-		
+
 		["GET","/secure/login",true,"req.query.abc === 'abc'"],
 		["GET","/secure/loginParam",{"private":"true"},true,"req.query.abc === 'abc'"],
-		
+
 		["GET","/secure/user/:user","req.params.user === '1'"],
 
-		["GET","/secure/dash","_.contains([1,2,3],1)"],
-		
+		["GET","/secure/dash","_.includes([1,2,3],1)"],
+
 		["GET","/secure/request","request.url !== null"],
 
 		["GET","/secure/badLoader","nothing","item === 1"],
 		["GET","/secure/loader","group","item === 1"]
-	]	
+	]
 }
