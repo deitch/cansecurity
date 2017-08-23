@@ -6,17 +6,17 @@ cansecurity is your **all-in-one** security library for user authentication mana
 You can use use authentication, per-route authorization, and even <u>declarative</u> authorization. You can authenticate against *any* authentication system you like, just provide the interface function.
 
 It's this simple:
-    
+
 ```Javascript
 var express = require('express'), app = express(), cs = require('cansecurity'), cansec = cs.init(/* init params */);
 	app.use(cansec.validate);
 	app.user(app.router);
-		
+
 	// send200 is a shortcut route to send a 200 response
-		
+
 	// open route
 	app.get("/public",send200);
-		
+
 	// only authorized if logged in, or as certain roles, or some combination
 	app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
 	app.get("/secure/user/:user",cansec.restrictToSelf,send200);
@@ -24,12 +24,12 @@ var express = require('express'), app = express(), cs = require('cansecurity'), 
 	app.get("/secure/roles/adminOrSuper",cansec.restrictToRoles(["admin","super"]),send200);
 	app.get("/secure/selfOrRoles/:user/admin",cansec.restrictToSelfOrRoles("admin"),send200);
 	app.get("/secure/selfOrRoles/:user/adminOrSuper",cansec.restrictToSelfOrRoles(["admin","super"]),send200);
-		
+
 	// only authorized if "searchParam" is set to the same value as the user ID field set in cs.init();
 	app.get("/secure/param",cansec.restrictToParam("searchParam"),send200);
 	app.get("/secure/paramOrRole",cansec.restrictToParamOrRoles("searchParam","admin"),send200);
 	app.get("/secure/paramOrMultipleRoles",cansec.restrictToParamOrRoles("searchParam",["admin","super"]),send200);
-		
+
 	// only authorized if getCheckObject() returns an object, with field owner, that has a value matching the user ID field
 	app.get("/secure/field",cansec.restrictToField("owner",getCheckObject),send200);
 	app.get("/secure/fields",cansec.restrictToField(["owner","recipient"],getCheckObject),send200);
@@ -37,7 +37,7 @@ var express = require('express'), app = express(), cs = require('cansecurity'), 
 	app.get("/secure/fieldOrRoles",cansec.restrictToFieldOrRoles("owner",["admin","super"],getCheckObject),send200);
 	app.get("/secure/fieldsOrRole",cansec.restrictToFieldOrRoles(["owner","recipient"],"admin",getCheckObject),send200);
 	app.get("/secure/fieldsOrRoles",cansec.restrictToFieldOrRoles(["owner","recipient"],["admin","super"],getCheckObject),send200);
-		
+
 	// only authorized if the request parameter "private" has the value "true", and then restrict to logged in
 	app.get("/secure/conditionalDirect",cansec.ifParam("private","true").restrictToLoggedIn,send200);
 	app.get("/secure/conditionalIndirect",cansec.ifParam("private","true").restrictToRoles(["admin","super"]),send200);
@@ -47,12 +47,12 @@ And if you prefer declarative authorization, even easier:
 
 ```Javascript
 // inside app.js:
-		
+
 // instantiate the user validator
 app.use(cansec.validate);
 // instantiate the declarative authorizer
 app.use(cansec.authorizer(pathToAuthConfigFile));
-		
+
 // inside "pathToAuthConfigFile"
 {
 	"routes": [
@@ -63,9 +63,9 @@ app.use(cansec.authorizer(pathToAuthConfigFile));
 		["PUT","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
 		["GET","/api/user/:user/roles","user.roles.admin === true || user.id === req.param('user')"],
 		["PUT","/api/user/:user/roles","user.roles.admin === true"]
-	]	
+	]
 }
-		
+
 ```
 
 #### Changes
@@ -79,7 +79,7 @@ The flow looks like this:
 ![swimlanes](./swimlane.png)
 
 ### Authorization
-cansecurity will handle authorization in your requests, determining if a user should be allowed to perform a certain request, based on your rules. 
+cansecurity will handle authorization in your requests, determining if a user should be allowed to perform a certain request, based on your rules.
 
 You can tell cansecurity to manage your authorization imperatively (via middleware code) or declaratively (using a config file). Whatever works better for you is just fine for cansecurity!
 
@@ -137,7 +137,7 @@ require('cansecurity').getUser(req);
 cs.getUser(req);
 ```
 
-You can also determine *how* the current user was authorized, credentials (e.g. password) and token, by calling 
+You can also determine *how* the current user was authorized, credentials (e.g. password) and token, by calling
 
 ```JavaScript
 require('cansecurity').getAuthMethod(req);
@@ -167,7 +167,7 @@ callback(success,user,message);
 Where:
   `success`: boolean, if we succeeded in retrieving the user and, if requested, validating password credentials
 	`user`: the actual user object. This can be a function, a JavaScript object, anything you want. It will be placed inside the session and the request for you to use later. If retrieval/validation was successful, this must not be null/undefined.
-	`message` = the error message in case of retrieval/validation failure. This can be anything you want, and will be passed along with the 401 unauthenticated response. 
+	`message` = the error message in case of retrieval/validation failure. This can be anything you want, and will be passed along with the 401 unauthenticated response.
 
 If the user was already authenticated via session, token or some other method, then `validateUser()` will be called with `password` parameter set to `undefined`. If `password` is set to **anything** other than `undefined` (including a blank string), then `validateUser()` is expected to validate the password along with retrieving the user.
 
@@ -184,11 +184,11 @@ cansec.init({
 ````
 
 ### Unauthenticated Errors
-When authentication fails, cansecurity will directly return 401 with the message "unauthenticated". 
+When authentication fails, cansecurity will directly return 401 with the message "unauthenticated".
 
-* If authentication is required and succeeds, it will set request["X-CS-Auth"], and request.session["X-CS-Auth"] if sessions are enabled, and then call next() to jump to the next middleware. 
+* If authentication is required and succeeds, it will set request["X-CS-Auth"], and request.session["X-CS-Auth"] if sessions are enabled, and then call next() to jump to the next middleware.
 * If authentication is required and fails, it will return `401` with the text message `unauthenticated`
-* If authentication is **not** required, it will jump to the next middleware 
+* If authentication is **not** required, it will jump to the next middleware
 
 If the user has provided HTTP Basic Authentication credentials in the form of username/password **and** the authentication via `validate()` fails. In that case, cansecurity will return a `401`.
 
@@ -214,7 +214,7 @@ To summarize:
 #### HTTP Response Header
 cansecurity passes details about success or failure of authentication in the custom `X-CS-Auth` HTTP response header. Of course, a failed authentication will return a `401`, but the *reason* for failure will be in the appropriate header listed in this section. Similarly, a successful authentication - by *any* means - will allow the request to go through returning a `200`, `201`, `403`, `404`, etc., depending on the app. cansecurity *will*, however, return the session token and logged in user via the `X-CS-Auth` HTTP response header.
 
-The `X-CS-Auth` response header contains error responses or success tokens. 
+The `X-CS-Auth` response header contains error responses or success tokens.
 
 ##### Success
 
@@ -227,7 +227,7 @@ success token username expiry
 Where:
 	`success`: result of the authentication, either `success` or `error`
 	`token`: a JSON Web token if `success`, or an error message if `error`
-	`username`: the user's username if `success`
+	`username`: the username if `success`
 	`expiry`: when this token will expire, as a JavaScript (Unix) second timestamp, provided by `Math.floor(new Date().getTime()/1000)`
 
 Because a new token is created anew with each request, the expiry window is rolling - x minutes from the last valid request.
@@ -238,7 +238,7 @@ The JWT payload contains the following fields:
 
 * `sub`: the subject of the JWT. This is identical to the `username` field in the header response.
 * `exp`: the expiry of the token. This is identical to the `expiry` field in the header response.
-* `cs-user`: the actual logged in user when authentication by any means was successful. 
+* `cs-user`: the actual logged in user when authentication by any means was successful.
 
 
 The `cs-user` is a "JST private claim". Normally, it is a JSON-encoded string, but it really depends on what your `validate()` function returns in the `user` parameter of the `callback`.
@@ -317,7 +317,7 @@ In initialization, you set two key authorization parameters as properties of the
 * * fields.id: Property of the User object that contains the user ID. OPTIONAL. Defaults to "id"
 * * fields.roles: Property of the User object that contains the user roles, as an array of strings. OPTIONAL. Defaults to "roles"
 * params: OPTIONAL. Names of params passed as part of the expressjs route, and retrievable as this.params[param]. These params are used as part in some of the restrictTo* authorization middleware. There is currently one field:
-* * params.id: Param in which the user ID is normally stored, if none is provided, then "user" is used. For example, if params.id === "foo", then the route should have /user/:foo. 
+* * params.id: Param in which the user ID is normally stored, if none is provided, then "user" is used. For example, if params.id === "foo", then the route should have /user/:foo.
 
 Initialization returns the object that has the restrictTo* middleware.
 
@@ -326,7 +326,7 @@ As in the example above, once you have authentication and authorization set up a
 
 ```JavaScript
 // execute routeHandler() if user is logged in, else send 401
-app.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler); 
+app.get("/some/route/:user",cansec.restrictToLoggedIn,routeHandler);
 // execute routeHandler if req.param("user") === user[fields.id], where 'user' is as returned by validate(), else send 401
 app.get("/my/data/:user",cansec.restrictToSelf,routeHandler);
 // execute routeHandler if user[fields.roles] contains "admin", where 'user' is as returned by validate(), else send 401
@@ -339,11 +339,11 @@ app.get("/user",cansec.ifParam("secret","true").restrictToRoles("admin"),routeHa
 ```
 
 #### Unauthorized Errors
-cansecurity authorization will directly return a `403` and message `unauthorized` if authorization is required, i.e. a restrictTo* middleware is called, **and** fails. 
+cansecurity authorization will directly return a `403` and message `unauthorized` if authorization is required, i.e. a restrictTo* middleware is called, **and** fails.
 
 Obviously, authentication comes before authorization, and if the user fails to authenticate, you may get a 401 from the authentication section without ever trying authorization.
 
-#### Middleware API 
+#### Middleware API
 The following authorization middleware methods are available. Each one is followed by an example. There are two sections
 
 * Regular API: Regular restrictTo* that are always applied.
@@ -406,11 +406,11 @@ var cansec = require('cansecurity').init({
 });
 app.put("/api/user/search",cansec.restrictToParam("searchParam"),routeHandler);
 /*
- * Will work if the logged in user has a property "userid" (since init() set fields.id to "userid"), and the value of that property matches req.param("searchParam"). 
+ * Will work if the logged in user has a property "userid" (since init() set fields.id to "userid"), and the value of that property matches req.param("searchParam").
  * Useful for using parameters in searches.
  */
 ```
-	
+
 * restrictToParamOrRoles - user must have logged in and some field in the user object (fields.id) from authentication must equal some parameter in the URL or body (params.id) *or* user must have a specific role. Param argument and roles argument to the function may each be a string or an array of strings.
 
 ```JavaScript
@@ -422,7 +422,7 @@ app.put("/api/user/search",cansec.restrictToParamOrRoles("searchParam",["admin",
 app.put("/api/address/search",cansec.restrictToParamOrRoles(["searchParam","addParam"],"admin"),routeHandler);
 /*
  * Will work if one of the following is true:
- * 1) the logged in user has a property "userid" (since init() set fields.id to "userid"), and the value of that property matches req.param("searchParam"), or, in the second example, one of "searchParam" or "addParam". 
+ * 1) the logged in user has a property "userid" (since init() set fields.id to "userid"), and the value of that property matches req.param("searchParam"), or, in the second example, one of "searchParam" or "addParam".
  * 2) The logged in user has the role, as one of the array of strings of the property "roles", set to "admin" or "superadmin" (for the first example), or "admin" (for the second example).
  */
 ```
@@ -499,7 +499,7 @@ What if you have a resource that is normally accessible by all, but if certain p
 app.get("/api/employee",cansec.ifParameter("secret","true").restrictToRoles("admin"),sendDataFn);
 ```
 
-In the above example, anyone can do a GET on /api/employee, but if they pass the parameter ?secret=true, then they will have to be logged in and have the role "admin" defined. 
+In the above example, anyone can do a GET on /api/employee, but if they pass the parameter ?secret=true, then they will have to be logged in and have the role "admin" defined.
 
 In our example, sendDataFn also checks for that parameter. If it is not set, then it sends public data about the employee list; if it is set, it sends public and private data, trusting that cansecurity prevented someone from getting in with ?secret=true unless they are authorized.
 
@@ -526,7 +526,7 @@ If you want to deny access to everything - always send a 403 - unless it is *exp
 ```JavaScript
 app.get("/api/employee/:user",cansec.restrictToSelfOrRoles("admin"),sendDataFn);
 app.get("/public/page",send200);
-// lots more 
+// lots more
 app.get("*",function(req,res,next){res.send(403);});
 ```
 
@@ -577,7 +577,7 @@ But it still requires lots of code in the routes. What if you could just declare
 		["PUT","/api/user/:user","user.roles.admin === true || user.id === req.param('user')"],
 		["GET","/api/user/:user/roles","user.roles.admin === true || user.id === req.param('user')"],
 		["PUT","/api/user/:user/roles","user.roles.admin === true"]
-	]	
+	]
 }
 ```
 
@@ -666,14 +666,14 @@ If you want to deny access to everything - always send a 403 - unless it is *exp
 #### Context for the Condition
 The condition string is run inside its own new context. Besides the usual nodejs environment, it has the following variable available to it:
 
-1. `req`: the actual express `req` object, normally found on each route whose signature is `function(req,res,next)`. 
+1. `req`: the actual express `req` object, normally found on each route whose signature is `function(req,res,next)`.
 2. `request`: an alias for `req`
 3. `user`: the user object if you used cansecurity authentication. This is the equivalent of calling `cansec.getUser(req)`.
 4. `_`: the underscore/lodash utility functions. cansecurity actually uses [lodash](http://lodash.com)
 5. `item`: the item loaded, if any, by the loader functions passed to `cansec.init()`; see below.
 
 #### Loading Data
-You have the option, but not the requirement, to load data before passing your route through the declarative authorizer. 
+You have the option, but not the requirement, to load data before passing your route through the declarative authorizer.
 
 
 Each loader function has two simple jobs to do:
@@ -746,7 +746,7 @@ You can define the loader functions in a file local to a certain declarative fil
 // in your main server.js
 app.use(cansec.authorizer(__dirname+'/path/to/decl.json',{loader: {
 	fn1: function(req,res,next){},
-	fn2: function(req,res,next){} 
+	fn2: function(req,res,next){}
 }}))
 ```
 
@@ -847,7 +847,7 @@ mocha -g restify
 ## Breaking Changes
 
 #### Changes to version 2.0.0
-2.0.0 is a major release with many breaking changes. 
+2.0.0 is a major release with many breaking changes.
 
 ##### JWT instead of multiple headers
 The `X-CS-Auth` header is deprecated from requests. All credentials should be passed in the `Authentication` header, either `Basic` for user/pass authentication, or `Bearer` for a JSON Web Token that was generated by cansecurity.
@@ -912,12 +912,12 @@ Beginning with version 0.6.0, cansecurity will **always** return 401 if authenti
 This makes the results far more consistent.
 
 #### Changes to version 0.5.0
-These notes apply to anyone using cansecurity *prior* to v0.5.0. These changes may be breaking, so read carefully. 
+These notes apply to anyone using cansecurity *prior* to v0.5.0. These changes may be breaking, so read carefully.
 
 ##### express 3.x required
 Prior to version 0.5.0 (and preferably prior to 0.4.8), cansecurity worked with express 2.x and 3.x, although the full testing regimen worked properly only in express 2.x. Beginning with 0.5.0, only express 3.x will work.
 
-##### validatePassword and getUser consolidated into 
+##### validatePassword and getUser consolidated into
 In versions of cansecurity prior to 0.5.0, there were two functions passed to `init()`:
 
 * `validatePassword()` was called when the user authenticated with credentials to be checked.
@@ -927,9 +927,8 @@ As of version 0.5.0, these are consolidated into a single `validate()` function.
 
 Until version 1.0 of cansecurity, the legacy functions will continue to operate, if deprecated, under the following circumstances:
 
-    IF `validate()` is `undefined`, AND (`validatePassword()` and `getUser()`) are present, THEN cansecurity will use the old API. 
+    IF `validate()` is `undefined`, AND (`validatePassword()` and `getUser()`) are present, THEN cansecurity will use the old API.
 
 		IF `validate()` is defined, THEN (`validatePassword()` and `getUser()`) will be ignored, whether present or not.
 
 Beginning with cansecurity 1.0, the old API will not function at all.
-
