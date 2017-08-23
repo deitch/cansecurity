@@ -102,13 +102,14 @@ var cs = require('cansecurity');
 var cansec = cs.init(initConfig);
 ```
 
-The `initConfig` has six properties:
+The `initConfig` has the following properties:
 
 * `sessionExpiry`: OPTIONAL. Integer in minutes how long sessions should last, default is `15`. Used both for expressjs sessions and CS sessions. Setting `sessionExpiry` will **only** affect how long a session is valid **for cansecurity**. It will **not** affect the underlying expressjs session itself.
 * `sessionKey`: OPTIONAL. String. Secret key shared between nodejs servers to provide single-sign-on. This is a string. The default, if none is provided, is a random 64-character string. This is **required** if you want to take advantage of cansecurity's stateless sessions. Keep this very secret.
 * `validate`: REQUIRED. Function that will get a user by username, and possibly validate their password, asynchronously. For more details, see below.
 * `encryptHeader`: OPTIONAL. With a value of true, the entire JWT is encrypted using `rc4-hmac-md5` algorithm.
 * `authHeader`: OPTIONAL. Replaces the header `X-CS-Auth` in which the server sends its token and user information back to the requestor/browser with the specified header name. `X-CS-Auth` is used *only* for sending the request from the server to the requestor (browser). The request to the server *always* is `Authentication`.
+* `invalidTokenMessage`: OPTIONAL. Custom message to send back if an authentication is attempted with an invalid token.
 * `debug`: OPTIONAL. Print debug messages about each authentication attempt to the console. It will **not** include the actual password.
 
 #### Validation

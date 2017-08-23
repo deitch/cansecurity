@@ -1,7 +1,7 @@
 /*jslint node:true, nomen:true, unused:vars */
 /*global before, it, describe, after */
 var express = require('express'), restify = require('restify'), app, request = require('supertest'),
-cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'), 
+cansec, cs = require('./resources/cs'), errorHandler = require('./resources/error'),
 cookieParser = require('cookie-parser'),
 session = require('express-session'),
 declareFile = __dirname+'/resources/declare.json',
@@ -165,16 +165,16 @@ describe('declarative authorization', function(){
 			before(function(){
 				cansec = cs.init();
 				app = express();
-				app.use(cookieParser());	
+				app.use(cookieParser());
 				app.use(session({secret: "agf67dchkQ!",resave:false,saveUninitialized:false}));
 				app.use(cansec.validate);
 				// This is where we instantiate the declarative authorizer
 				app.use(cansec.authorizer(declareFile));
 				app.use(errorHandler);
-		
+
 				// we just send 200 for all routes, if it passes authorization
 				app.all('*',send200);
-		
+
 				r = request(app);
 			});
 			firsttests();
@@ -183,16 +183,16 @@ describe('declarative authorization', function(){
 			before(function(){
 				cansec = cs.init();
 				app = express();
-				app.use(cookieParser());	
+				app.use(cookieParser());
 				app.use(session({secret: "agf67dchkQ!",resave:false,saveUninitialized:false}));
 				app.use(cansec.validate);
 				// This is where we instantiate the declarative authorizer
 				app.use(cansec.authorizer(declareFile,{format:true}));
 				app.use(errorHandler);
-		
+
 				// we just send 200 for all routes, if it passes authorization
 				app.all('*',send200);
-		
+
 				r = request(app);
 			});
 			secondtests();
@@ -201,17 +201,17 @@ describe('declarative authorization', function(){
 			before(function(){
 				cansec = cs.init();
 				app = express();
-				app.use(cookieParser());	
+				app.use(cookieParser());
 				app.use(session({secret: "agf67dchkQ!",resave:false,saveUninitialized:false}));
 				app.use(cansec.validate);
 				// This is where we instantiate the declarative authorizer
 				app.use(cansec.authorizer(declareFile));
 				app.use(cansec.authorizer(declareLocalFile,{loader:require(declareLocalLoader)}));
 				app.use(errorHandler);
-		
+
 				// we just send 200 for all routes, if it passes authorization
 				app.all('*',send200);
-		
+
 				r = request(app);
 			});
 			// all of the firsttests should still pass
@@ -235,7 +235,7 @@ describe('declarative authorization', function(){
 				app.put(/^.*$/,send200);
 				app.del(/^.*$/,send200);
 				app.head(/^.*$/,send200);
-		
+
 				r = request(app);
 			});
 			firsttests();
@@ -251,14 +251,14 @@ describe('declarative authorization', function(){
 				app.use(cansec.validate);
 				// This is where we instantiate the declarative authorizer
 				app.use(cansec.authorizer(declareFile,{format:true}));
-		
+
 				// we just send 200 for all routes, if it passes authorization
 				app.get(/^.*$/,send200);
 				app.post(/^.*$/,send200);
 				app.put(/^.*$/,send200);
 				app.del(/^.*$/,send200);
 				app.head(/^.*$/,send200);
-		
+
 				r = request(app);
 			});
 			secondtests();
