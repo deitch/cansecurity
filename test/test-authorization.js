@@ -334,7 +334,7 @@ describe('authorization', function(){
 		before(function(){
 			cansec = cs.init();
 			app = express();
-			app.use(cookieParser());	
+			app.use(cookieParser());
 			app.use(session({secret: "agf67dchkQ!",resave:false,saveUninitialized:false}));
 			app.use(cansec.validate);
 			app.use(errorHandler);
@@ -355,5 +355,3 @@ describe('authorization', function(){
 		alltests();
 	});
 });
-
-

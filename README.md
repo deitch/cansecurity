@@ -105,12 +105,34 @@ var cansec = cs.init(initConfig);
 The `initConfig` has the following properties:
 
 * `sessionExpiry`: OPTIONAL. Integer in minutes how long sessions should last, default is `15`. Used both for expressjs sessions and CS sessions. Setting `sessionExpiry` will **only** affect how long a session is valid **for cansecurity**. It will **not** affect the underlying expressjs session itself.
-* `sessionKey`: OPTIONAL. String. Secret key shared between nodejs servers to provide single-sign-on. This is a string. The default, if none is provided, is a random 64-character string. This is **required** if you want to take advantage of cansecurity's stateless sessions. Keep this very secret.
+* `sessionKey`: OPTIONAL. String. Secret key shared between nodejs servers to provide single-sign-on.
+* `privateKey`: OPTIONAL. String. PEM-encoded RSA private key to use to encrypt the token.
+* `publicKey`: OPTIONAL. String. PEM-encoded RSA public key to use to validate the token.
 * `validate`: REQUIRED. Function that will get a user by username, and possibly validate their password, asynchronously. For more details, see below.
 * `encryptHeader`: OPTIONAL. With a value of true, the entire JWT is encrypted using `rc4-hmac-md5` algorithm.
 * `authHeader`: OPTIONAL. Replaces the header `X-CS-Auth` in which the server sends its token and user information back to the requestor/browser with the specified header name. `X-CS-Auth` is used *only* for sending the request from the server to the requestor (browser). The request to the server *always* is `Authentication`.
 * `invalidTokenMessage`: OPTIONAL. Custom message to send back if an authentication is attempted with an invalid token.
 * `debug`: OPTIONAL. Print debug messages about each authentication attempt to the console. It will **not** include the actual password.
+
+##### Token Signing Keys
+`cansecurity` supports both shared key token validation and public/private key token validation. Which it uses depends on what parameters you pass:
+
+* `sessionKey`: shared session key using `"HS256"` algorithm.
+* `privateKey` / `publicKey`: public/private key using `"RS256"` algorithm.
+* none of the above: will automatically generate a shared session key, a random 64-character string.
+
+Because the default, if no option is provided, is to auto-generate a shared session key, you **must** provide _either_ a public/private key pair _or_ a session if you want to share tokens between servers.
+
+The behaviour of `cansecurity` changes based on which parameters you provide:
+
+* No `sessionKey`, `publicKey` or `privateKey`: auto-generate a random shared session key, as described above.
+* Only `sessionKey`: sign and validate tokens using provided session key with `"HS256"` algorithm.
+* Only `privateKey`: sign tokens using provided private key with `"RS256"` algorithm. **Any attempt to validate tokens will fail.**
+* Only `publicKey`: validate tokens using provided public key with `"RS256"` algorithm. **Any attempt to sign tokens will fail.**
+* Both `privateKey` and `publicKey`: sign and validate tokens using provided private and public keys with `"RS256"` algorithm.
+* `sessionKey` and either `publicKey` or `privateKey`: launch-time error.
+
+Note that encrypted headers do not yet work with private/public keys, as they rely on the same session key to encrypt.
 
 #### Validation
 Validation is straightforward. Once you have set up cansecurity properly, it functions as standard expressjs middleware:

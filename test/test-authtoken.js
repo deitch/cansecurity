@@ -1,11 +1,15 @@
 /*jslint node:true, unused:vars */
 /*global before,it,describe */
 var express = require( 'express' ), restify = require('restify'),
+	fs = require('fs'),
+	path = require('path'),
 	jwt = require('jsonwebtoken'),
 	app,
 	async = require( 'async' ),
 	cansec,
 	cs = require( './resources/cs' ),
+	privKey = fs.readFileSync(path.join(__dirname,'resources/rsa-private.pem')),
+	pubKey = fs.readFileSync(path.join(__dirname,'resources/rsa-public.pem')),
 	cookieParser = require('cookie-parser'),
 	session = require('express-session'),
 	tokenlib = require( '../lib/token' ),
@@ -26,11 +30,11 @@ var express = require( 'express' ), restify = require('restify'),
 	checkUserInfo = function (res) {
 		var match = res.headers[ authHeader ].match( successRe ),
 		decoded = jwt.decode(match[2]);
-		// take JWT (match[2]), split on '.', base64 decode 2nd part (claims), 
+		// take JWT (match[2]), split on '.', base64 decode 2nd part (claims),
 		//   check that the 'cs-user' claim is identical to userInfo
 		return decoded["cs-user"] === userInfo;
 	},
-	path = "/public", 
+	path = "/public",
 	alltests = function () {
 		it( 'should reject invalid token', function ( done ) {
 			r.get( path ).set( "Authorization", "Bearer blahblah" ).expect( 401 ).expect( authHeader, "error invalidtoken", done );
@@ -51,7 +55,7 @@ var express = require( 'express' ), restify = require('restify'),
 		} );
 		it( 'should allow to reuse a token', function ( done ) {
 			var user = "john",
-			token = tokenlib.generate( user, "1234", now() + 15 * 60 );			
+			token = tokenlib.generate( user, "1234", now() + 15 * 60 );
 			async.waterfall( [
 
 				function ( cb ) {
@@ -87,18 +91,50 @@ var express = require( 'express' ), restify = require('restify'),
 						cb( "unmatched name" );
 					}
 				}
-			], done );			
+			], done );
 		} );
 	};
 describe( 'authtoken', function () {
-	describe('express', function(){
+	describe('sessionKey', function() {
+		describe('express', function(){
+			before( function () {
+				cansec = cs.init();
+				app = express();
+				app.use( cookieParser() );
+				app.use( session( {
+					secret: "agf67dchkQ!",resave:false,saveUninitialized:false
+				} ) );
+				app.use( cansec.validate );
+				app.get( path, function ( req, res, next ) {
+					// send a 200
+					require('../lib/sender')(res,200);
+				} );
+				r = request( app );
+			} );
+			alltests();
+		});
+		describe('restify', function(){
+			before( function () {
+				// we need to handle the mess that restify creates
+				// we create a prototype chain for http.IncomingMessage, so when restify changes it, it changes the new middle layer,
+				// which we can restore
+				cansec = cs.init();
+				app = restify.createServer();
+				app.use( cansec.validate );
+				app.get( path, function ( req, res, next ) {
+					// send a 200
+					require('../lib/sender')(res,200);
+				} );
+				r = request( app );
+			} );
+			alltests();
+		});
+	});
+	describe('publicKey', function() {
 		before( function () {
-			cansec = cs.init();
+			cansec = cs.init({privateKey: privKey, publicKey: pubKey});
 			app = express();
 			app.use( cookieParser() );
-			app.use( session( {
-				secret: "agf67dchkQ!",resave:false,saveUninitialized:false
-			} ) );
 			app.use( cansec.validate );
 			app.get( path, function ( req, res, next ) {
 				// send a 200
@@ -107,21 +143,24 @@ describe( 'authtoken', function () {
 			r = request( app );
 		} );
 		alltests();
-	});
-	describe('restify', function(){
-		before( function () {
-			// we need to handle the mess that restify creates
-			// we create a prototype chain for http.IncomingMessage, so when restify changes it, it changes the new middle layer,
-			// which we can restore
-			cansec = cs.init();
-			app = restify.createServer();
-			app.use( cansec.validate );
-			app.get( path, function ( req, res, next ) {
-				// send a 200
-				require('../lib/sender')(res,200);
+		describe('mismatched keys', function() {
+			before( function () {
+				cansec = cs.init({privateKey: privKey, publicKey: "abcdefg"});
+				app = express();
+				app.use( cookieParser() );
+				app.use( cansec.validate );
+				app.get( path, function ( req, res, next ) {
+					// send a 200
+					require('../lib/sender')(res,200);
+				} );
+				r = request( app );
 			} );
-			r = request( app );
-		} );
-		alltests();
+			it( 'should reject mismatched token', function ( done ) {
+				var user = "john",
+					expiry = now() + 15 * 60,
+				token = tokenlib.generate( user, "1234", expiry );
+				r.get( path ).set( "Authorization", "Bearer "+token ).expect( 401 ).expect( authHeader, 'error invalidtoken', done );
+			} );
+		});
 	});
 } );

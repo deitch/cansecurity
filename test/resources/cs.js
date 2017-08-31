@@ -30,8 +30,8 @@ var _ = require( 'lodash' ),
 	}, SESSIONKEY = "ABCDEFG";
 
 module.exports = {
-	init: function () {
-		return cs.init( {
+	init: function (param) {
+		return cs.init( Object.assign({
 			validate: function ( login, pass, callback ) {
 				var found = null;
 				// search for our user
@@ -62,88 +62,11 @@ module.exports = {
 					req.cansecurity.item = "global";
 					next();
 				}
-			},
-			sessionKey: SESSIONKEY
-		} );
-	},
-	initEncrypted: function () {
-		return cs.init( {
-			validate: function ( login, pass, callback ) {
-				var found = null;
-				// search for our user
-				_.each( user, function ( val, key ) {
-					var ret = true;
-					if ( val.name === login ) {
-						found = val;
-						ret = false;
-					}
-					return ( ret );
-				} );
-				if ( !found ) {
-					callback( false, null, "invaliduser" );
-				} else if ( pass === undefined ) {
-					callback( true, found, found.name, found.pass );
-				} else if ( pass === found.pass ) {
-					callback( true, found, found.name, found.pass );
-				} else {
-					callback( false, null, "invalidpass" );
-				}
-			},
-			loader: {
-				group: function ( req, res, next ) {
-					req.cansecurity.item = 1;
-					next();
-				}
-			},
-			sessionKey: SESSIONKEY,
-			encryptHeader: true
-		} );
+			}
+		}, param || {}) );
 	},
 	initTokenLib: function ( encrypt ) {
-		tokenLib.init(SESSIONKEY, encrypt || false);
+		tokenLib.init({key: SESSIONKEY, encrypt: encrypt || false});
 		return tokenLib;
-	},
-	initLegacy: function () {
-		return cs.init( {
-			getUser: function ( login, success, failure ) {
-				var found = null;
-				// search for our user
-				_.each( user, function ( val, key ) {
-					var ret = true;
-					if ( val.name === login ) {
-						found = val;
-						ret = false;
-					}
-					return ( ret );
-				} );
-				if ( found ) {
-					success( found, found.name, found.pass );
-				} else {
-					failure();
-				}
-			},
-			validatePassword: function ( login, pass, cb ) {
-				var p = null,
-					message = "invaliduser",
-					resuser = null;
-				// search for our user
-				_.each( user, function ( val, key ) {
-					var ret = true;
-					if ( val.name === login ) {
-						ret = false;
-						if ( val.pass === pass ) {
-							message = null;
-							resuser = val;
-							p = pass;
-						} else {
-							message = "invalidpass";
-						}
-					}
-					return ( ret );
-				} );
-				cb( resuser, message, p );
-			},
-			sessionKey: SESSIONKEY
-		} );
 	}
 };

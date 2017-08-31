@@ -107,7 +107,7 @@ var express = require( 'express' ), restify = require('restify'), jwt = require(
 describe( 'authtoken-encrypted', function () {
 	describe('express', function(){
 		before( function () {
-			cansec = cs.initEncrypted();
+			cansec = cs.init({encryptHeader: true});
 			app = express();
 			app.use( cookieParser() );
 			app.use( session( {
@@ -124,7 +124,7 @@ describe( 'authtoken-encrypted', function () {
 	});
 	describe('restify', function(){
 		before( function () {
-			cansec = cs.initEncrypted();
+			cansec = cs.init({encryptHeader: true});
 			app = restify.createServer();
 			app.use( cansec.validate );
 			app.get( path, function ( req, res, next ) {
