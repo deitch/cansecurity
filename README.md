@@ -19,7 +19,7 @@ var express = require('express'), app = express(), cs = require('cansecurity'), 
 
 	// only authorized if logged in, or as certain roles, or some combination
 	app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
-	app.get("/secure/customloggedin",cansec.unauthenticated({code:302,location:"/login"}),cansec.restrictToLoggedIn,send200);
+	app.get("/secure/customloggedin",cansec.setUnauthenticatedCode({code:302,location:"/login"}),cansec.restrictToLoggedIn,send200);
 	app.get("/secure/user/:user",cansec.restrictToSelf,send200);
 	app.get("/secure/roles/admin",cansec.restrictToRoles("admin"),send200);
 	app.get("/secure/roles/adminOrSuper",cansec.restrictToRoles(["admin","super"]),send200);
