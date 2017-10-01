@@ -211,10 +211,20 @@ cansec.init({
 When authentication fails, cansecurity will directly return 401 with the message "unauthenticated".
 
 * If authentication is required and succeeds, it will set request["X-CS-Auth"], and request.session["X-CS-Auth"] if sessions are enabled, and then call next() to jump to the next middleware.
-* If authentication is required and fails, it will return `401` with the text message `unauthenticated`
+* If authentication is required and fails, it will return `401` with the text message `unauthenticated`. You can customize the return code and optional headers on a per-path basis.
 * If authentication is **not** required, it will jump to the next middleware
 
 If the user has provided HTTP Basic Authentication credentials in the form of username/password **and** the authentication via `validate()` fails. In that case, cansecurity will return a `401`.
+
+#### Custom Unauthenticated Response
+If you wish to customize the response code or headers for unauthenticated, add a middleware setting a unique "unauthenticated" object _before_ the restriction that requires the user to be authenticated. For example:
+
+```js
+app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
+app.get("/secure/customloggedin",cansec.setUnauthenticatedCode({code:302,location:"/login"}),cansec.restrictToLoggedIn,send200);
+```
+
+In the above examples, the restrictions are _almost_ identical, except that a user not logged in (or with invalid credentials) attempting to access `/secure/loggedin` will receive a `401` http response code, whereas a user attempting to access `/secure/customloggedin` will receive a `302` http response code and the http header `Location: /login` will be set on the response.
 
 
 ### How Authentication Works
