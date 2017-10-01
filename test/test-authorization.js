@@ -12,6 +12,15 @@ getCheckObject = function(req,res) {
 	return({owner:"2",recipient:"4"});
 },
 alltests = function () {
+  describe('Authorization', function(){
+		before(function(){
+		  path = '/secure/customloggedin';
+		  location = '/login';
+		});
+		it('should reject with custom HTTP code when not logged in',function (done) {
+			r.get(path).set('Accept', 'text/plain').expect('location', location).expect(302,unauthenticated,done);
+		});
+  });
   describe('logged in path', function(){
 		before(function(){
 		  path = '/secure/loggedin';
@@ -309,6 +318,7 @@ alltests = function () {
 setpaths = function () {
 	app.get('/secure/fieldOrRole',cansec.restrictToFieldOrRoles("owner","admin",getCheckObject),send200);
 	app.get("/secure/loggedin",cansec.restrictToLoggedIn,send200);
+	app.get("/secure/customloggedin",cansec.setUnauthenticatedCode({code:302,location:"/login"}),cansec.restrictToLoggedIn,send200);
 	app.get("/secure/user/:user",cansec.restrictToSelf,send200);
 	app.get("/secure/roles/admin",cansec.restrictToRoles("admin"),send200);
 	app.get("/secure/roles/adminOrSuper",cansec.restrictToRoles(["admin","super"]),send200);
